@@ -1,0 +1,11 @@
+pip>=10.0.1
+setuptools>=39.2.0
+wheel>=0.31.1
+six>=1.11.0
+django>=2.1
+
+# Docs
+sphinx>=1.7.4
+sphinx_rtd_theme>=0.1.9
+sphinx-autobuild>=0.6.0
+sphinxcontrib-django
