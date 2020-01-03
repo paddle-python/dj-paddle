@@ -6,7 +6,7 @@ dj-paddle
 
 Django + Paddle Made Easy
 
-(this project is heavily inspired by `dj-paddle <https://github.com/dj-paddle/>`_)
+(this project is heavily inspired by `dj-stripe <https://github.com/dj-stripe/dj-stripe/>`_)
 
 Introduction
 ------------------------
