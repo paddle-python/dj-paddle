@@ -96,6 +96,6 @@ Please do not report security issues in public, but email the authors directly.
     :target: https://pypi.python.org/pypi/dj-paddle/
     :alt: Supported Python versions
 
-.. |license-badge| image:: https://img.shields.io/github/license/dj-paddle/dj-paddle.svg
+.. |license-badge| image:: https://img.shields.io/github/license/dj-paddle/dj-paddle
     :target: https://github.com/dj-paddle/dj-paddle/blob/master/LICENSE
     :alt: License
