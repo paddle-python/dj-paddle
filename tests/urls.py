@@ -13,5 +13,5 @@ def empty_view(request):
 urlpatterns = [
     path("home/", empty_view, name="home"),
     path("admin/", admin.site.urls),
-    path("djpaddle/", include("djpaddle.urls", namespace="djpaddle")),
+    path("djpaddle/", include(("djpaddle.urls", "djpaddle"), namespace="djpaddle")),
 ]
