@@ -221,6 +221,6 @@ if settings.DJPADDLE_LINK_STALE_SUBSCRIPTIONS:
     ):
         if created:
             subscriptions = Subscription.objects.filter(
-                user=None, email__iexact=instance.email
+                subscriber=None, email__iexact=instance.email
             )
-            subscriptions.update(user=instance)
+            subscriptions.update(subscriber=instance)
