@@ -40,7 +40,9 @@ verifier = PKCS1_v1_5.new(key)
 
 def is_valid_webhook(payload):
     data = dict(payload)
-    signature = data.pop("p_signature")
+    signature = data.pop("p_signature", None)
+    if signature is None:
+        return False
 
     # Ensure all the data fields are strings
     for field in data:
