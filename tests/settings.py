@@ -1,5 +1,7 @@
-import json
 import os
+import json
+
+from . import utils
 
 test_db_vendor = os.environ.get("DJPADDLE_TEST_DB_VENDOR", "sqlite")
 test_db_name = os.environ.get("DJPADDLE_TEST_DB_NAME", "djpaddle")
@@ -93,3 +95,6 @@ MIDDLEWARE = (
 )
 
 STATIC_URL = "/static/"
+
+DJPADDLE_KEY = utils.generate_private_key()
+DJPADDLE_PUBLIC_KEY = utils.export_pubkey_as_pem(DJPADDLE_KEY)
