@@ -4,6 +4,7 @@ import collections
 import phpserialize
 
 from Crypto.PublicKey import RSA
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     from Crypto.Hash import SHA1
@@ -17,10 +18,23 @@ except ImportError:
 
 from . import settings
 
-# Convert key from PEM to DER - Strip the first and last lines and newlines, and decode
-public_key_encoded = settings.DJPADDLE_PUBLIC_KEY[26:-25].replace("\n", "")
-public_key_der = base64.b64decode(public_key_encoded)
-key = RSA.importKey(public_key_der)
+
+def convert_pubkey_to_rsa(key):
+    """
+    convert key from PEM to DER - Strip the first and last lines and newlines, decode and
+    return an instance of `Crypto.PublicKey.RSA`
+    """
+    public_key_encoded = "".join(key.split("\n")[1:-1])
+    public_key_der = base64.b64decode(public_key_encoded)
+    return RSA.importKey(public_key_der)
+
+
+try:
+    key = convert_pubkey_to_rsa(settings.DJPADDLE_PUBLIC_KEY)
+except Exception as e:
+    msg = "failed to convert 'DJPADDLE_PUBLIC_KEY'; original message: " + str(e)
+    raise ImproperlyConfigured(msg)
+
 verifier = PKCS1_v1_5.new(key)
 
 
