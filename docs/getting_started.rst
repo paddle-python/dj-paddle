@@ -47,3 +47,6 @@ Add your paddle keys and set the operating mode:
 Run the commands::
 
     python manage.py migrate
+
+    # fetches all subscription plans from paddle
+    python manage.py djpaddle_sync_plans_from_paddle

@@ -73,6 +73,9 @@ Run the commands::
 
     python manage.py migrate
 
+    # fetches all subscription plans from paddle
+    python manage.py djpaddle_sync_plans_from_paddle
+
 
 Reporting Security Issues
 -------------------------
