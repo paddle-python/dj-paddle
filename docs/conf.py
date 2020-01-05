@@ -13,6 +13,8 @@ serve to show the default.
 import os
 import sys
 
+sys.path.insert(0, os.path.abspath(".."))
+
 from django import setup as django_setup
 from django.conf import settings
 
