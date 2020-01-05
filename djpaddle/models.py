@@ -3,10 +3,103 @@ from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
 from django.dispatch import receiver
 
-from . import settings, signals
+from . import settings, signals, api
+from .fields import PaddleCurrencyCodeField
 
 
-class Subscription(models.Model):
+class PaddleBaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Price(PaddleBaseModel):
+    plan = models.ForeignKey(
+        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
+    )
+    currency = PaddleCurrencyCodeField()
+    quantity = models.FloatField()
+    recurring = models.BooleanField()
+
+    def __str__(self):
+        return " ".join([str(self.quantity), self.currency])
+
+    class Meta:
+        ordering = ["currency", "recurring"]
+        unique_together = ("plan", "currency", "recurring")
+
+
+class Plan(PaddleBaseModel):
+    """
+    'Plan' represents a Paddle subscription plan.
+    """
+
+    PADDLE_URI_LIST = "subscription/plans"
+
+    BILLING_TYPE_DAY = "day"
+    BILLING_TYPE_MONTH = "month"
+    BILLING_TYPE_YEAR = "year"
+    BILLING_TYPE = (
+        (BILLING_TYPE_DAY, _("day")),
+        (BILLING_TYPE_MONTH, _("month")),
+        (BILLING_TYPE_YEAR, _("year")),
+    )
+
+    name = models.CharField(max_length=255)
+    billing_type = models.CharField(choices=BILLING_TYPE, max_length=255)
+    billing_period = models.IntegerField()
+    trial_days = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    @classmethod
+    def api_list(cls):
+        return api.retrieve(uri=cls.PADDLE_URI_LIST)
+
+    @classmethod
+    def sync_from_paddle_data(cls, data):
+        pk = data.pop("id", None)
+        initial_price = data.pop("initial_price", [])
+        recurring_price = data.pop("recurring_price", [])
+
+        plan, _ = cls.objects.get_or_create(pk=pk, defaults=data)
+
+        # drop all existing prices
+        plan.prices.all().delete()
+
+        Price.objects.bulk_create(
+            # re-create initial prices
+            [
+                Price(
+                    plan=plan,
+                    currency=currency,
+                    quantity=float(quantity),
+                    recurring=False,
+                )
+                for currency, quantity in initial_price.items()
+            ]
+            # re-create initial prices
+            + [
+                Price(
+                    plan=plan,
+                    currency=currency,
+                    quantity=float(quantity),
+                    recurring=True,
+                )
+                for currency, quantity in recurring_price.items()
+            ]
+        )
+
+        return plan
+
+    def __str__(self):
+        return "Plan <{}:{}>".format(self.name, str(self.id))
+
+
+class Subscription(PaddleBaseModel):
     """
     'Subscription' represents a Paddle subscription.
 
@@ -51,9 +144,12 @@ class Subscription(models.Model):
     quantity = models.IntegerField()
     source = models.URLField()
     status = models.CharField(choices=STATUS, max_length=16)
-    subscription_plan_id = models.CharField(max_length=32)
+    plan = models.ForeignKey("djpaddle.Plan", on_delete=models.CASCADE)
     unit_price = models.FloatField()
     update_url = models.URLField()
+
+    class Meta:
+        ordering = ["created_at"]
 
     @classmethod
     def _sanitize_webhook_payload(cls, payload):
@@ -68,6 +164,12 @@ class Subscription(models.Model):
             data["subscriber"] = settings.get_subscriber_model().objects.get(
                 pk=subscriber_id
             )
+
+        # transform `subscription_plan_id` to plan ref
+        data["plan"] = None
+        plan_id = data.pop("subscription_plan_id", None)
+        if plan_id not in ["", None]:
+            data["plan"] = Plan.objects.get(pk=plan_id)
 
         # sanitize fields
         valid_field_names = [field.name for field in cls._meta.get_fields()]
@@ -91,6 +193,9 @@ class Subscription(models.Model):
         data = cls._sanitize_webhook_payload(payload)
         pk = data.pop("id")
         return cls.objects.update_or_create(pk, defaults=data)
+
+    def __str__(self):
+        return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
 
 
 @receiver(signals.subscription_created)
