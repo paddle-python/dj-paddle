@@ -186,7 +186,7 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def from_subscription_created(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
-        return cls(**data)
+        return cls.objects.get_or_create(**data)
 
     @classmethod
     def update_by_payload(cls, payload):
