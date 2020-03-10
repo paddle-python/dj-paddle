@@ -161,8 +161,8 @@ class Subscription(PaddleBaseModel):
         data["subscriber"] = None
         subscriber_id = payload.pop("user_id", None)
         if subscriber_id not in ["", None]:
-            data["subscriber"] = settings.get_subscriber_model().objects.get(
-                pk=subscriber_id
+            data["subscriber"], created = settings.get_subscriber_model().objects.get_or_create(
+                email=payload["email"]
             )
 
         # transform `subscription_plan_id` to plan ref
