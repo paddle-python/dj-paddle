@@ -155,11 +155,11 @@ class Subscription(PaddleBaseModel):
     def _sanitize_webhook_payload(cls, payload):
         data = {}
 
-        data["id"] = data.pop("subscription_id", None)
+        data["id"] = payload.pop("subscription_id", None)
 
         # transform `user_id` to subscriber ref
         data["subscriber"] = None
-        subscriber_id = data.pop("user_id", None)
+        subscriber_id = payload.pop("user_id", None)
         if subscriber_id not in ["", None]:
             data["subscriber"] = settings.get_subscriber_model().objects.get(
                 pk=subscriber_id
@@ -167,7 +167,7 @@ class Subscription(PaddleBaseModel):
 
         # transform `subscription_plan_id` to plan ref
         data["plan"] = None
-        plan_id = data.pop("subscription_plan_id", None)
+        plan_id = payload.pop("subscription_plan_id", None)
         if plan_id not in ["", None]:
             data["plan"] = Plan.objects.get(pk=plan_id)
 
