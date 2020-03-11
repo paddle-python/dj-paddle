@@ -15,6 +15,7 @@ class TestWebhook(TestCase):
     def test_webhook_is_valid_alert(self, is_valid_webhook):
         valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
         valid_alert["p_signature"] = "valid-signature"
+        plan = Plan.objects.create(pk=1, name="monthly-subscription", billing_type="month", billing_period=1, trial_days=0)
 
         resp = self._send_alert(valid_alert)
         self.assertTrue(is_valid_webhook.called)
