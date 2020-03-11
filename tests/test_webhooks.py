@@ -1,10 +1,12 @@
 from copy import deepcopy
 from unittest import mock
 
+from django.conf import settings
 from django.urls import reverse
 from django.test import TestCase, Client
 
 from . import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
+from djpaddle.models import Plan, Subscription
 
 
 class TestWebhook(TestCase):
@@ -27,3 +29,13 @@ class TestWebhook(TestCase):
 
         resp = self._send_alert(invalid_alert)
         self.assertEqual(resp.status_code, 400)
+
+    @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
+    def test_subscription_created_webhook(self, is_valid_webhook):
+        payload = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
+        payload["p_signature"] = "valid-signature"
+        plan = Plan.objects.create(pk=1, name="monthly-subscription", billing_type="month", billing_period=1, trial_days=0)
+
+        resp = self._send_alert(payload)
+        subscription = Subscription.objects.get(email=payload["email"])
+        self.assertEqual(subscription.email, "gardner.wuckert@example.org")
