@@ -7,6 +7,10 @@ class APIException(Exception):
     pass
 
 
+class APIError(Exception):
+    pass
+
+
 def api_request(method, uri, data=None, *args, **kwargs):
     payload = {
         "vendor_id": settings.DJPADDLE_VENDOR_ID,
@@ -20,6 +24,15 @@ def api_request(method, uri, data=None, *args, **kwargs):
     resp.raise_for_status()
 
     data = resp.json()
+
+    if 'error' in data:
+        raise APIError(
+            'API error code {code} - {message}'.format(
+                code=data['error']['code'],
+                message=data['error']['message']
+            )
+        )
+
     if "response" not in data:
         raise APIException('malformed API response. "response" missing.')
 
