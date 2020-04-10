@@ -141,7 +141,8 @@ class Subscription(PaddleBaseModel):
     email = models.EmailField()
     event_time = models.DateTimeField()
     marketing_consent = models.BooleanField()
-    next_bill_date = models.DateTimeField()
+    next_bill_date = models.DateTimeField(
+        null=True, blank=True)
     passthrough = models.TextField()
     quantity = models.IntegerField()
     source = models.URLField()
@@ -187,7 +188,7 @@ class Subscription(PaddleBaseModel):
             event_time=timezone.now(), # ???
             marketing_consent=data.get('marketing_consent'),
             # next_bill_date can be null if user won't pay again...
-            next_bill_date=data.get("next_payment", {}).get("date", timezone.now()),
+            next_bill_date=data.get("next_payment", {}).get("date", None),
             passthrough="", # ???
             quantity=data.get("last_payment", {}).get("amount", 0),
             source="", # ???
