@@ -211,7 +211,7 @@ class Subscription(PaddleBaseModel):
         try:
             if subscriber_id not in ["", None]:
                 data[
-                    "subscriber"], created = settings.get_subscriber_model().objects.get(
+                    "subscriber"] = settings.get_subscriber_model().objects.get(
                     email=payload["email"]
                 )
         except settings.get_subscriber_model().DoesNotExist:
