@@ -126,7 +126,7 @@ class Subscription(PaddleBaseModel):
     )
     PADDLE_URI_LIST = 'subscription/users'
 
-    id = models.CharField(max_length=32, primary_key=True)
+    id = models.TextField(primary_key=True)
     subscriber = models.ForeignKey(
         settings.DJPADDLE_SUBSCRIBER_MODEL,
         related_name="subscriptions",
@@ -136,7 +136,7 @@ class Subscription(PaddleBaseModel):
     )
 
     cancel_url = models.URLField()
-    checkout_id = models.CharField(max_length=32)
+    checkout_id = models.TextField()
     currency = models.CharField(max_length=3)
     email = models.EmailField()
     event_time = models.DateTimeField()
