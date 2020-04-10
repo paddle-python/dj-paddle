@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
 from django.dispatch import receiver
+from django.utils import timezone
 
 from . import settings, signals, api
 from .fields import PaddleCurrencyCodeField
@@ -123,8 +124,9 @@ class Subscription(PaddleBaseModel):
         (STATUS_PAUSED, _("paused")),
         (STATUS_DELETED, _("deleted")),
     )
+    PADDLE_URI_LIST = 'subscription/users'
 
-    id = models.CharField(max_length=32, primary_key=True)
+    id = models.TextField(primary_key=True)
     subscriber = models.ForeignKey(
         settings.DJPADDLE_SUBSCRIBER_MODEL,
         related_name="subscriptions",
@@ -134,12 +136,13 @@ class Subscription(PaddleBaseModel):
     )
 
     cancel_url = models.URLField()
-    checkout_id = models.CharField(max_length=32)
+    checkout_id = models.TextField()
     currency = models.CharField(max_length=3)
     email = models.EmailField()
     event_time = models.DateTimeField()
     marketing_consent = models.BooleanField()
-    next_bill_date = models.DateTimeField()
+    next_bill_date = models.DateTimeField(
+        null=True, blank=True)
     passthrough = models.TextField()
     quantity = models.IntegerField()
     source = models.URLField()
@@ -152,6 +155,51 @@ class Subscription(PaddleBaseModel):
         ordering = ["created_at"]
 
     @classmethod
+    def api_list(cls):
+        return api.retrieve(uri=cls.PADDLE_URI_LIST)
+
+    @classmethod
+    def sync_from_paddle_data(cls, data):
+        pk = data.get('subscription_id', None)
+        # First, find and drop current sub with this data.
+        cls.objects.filter(pk=pk).delete()
+        kwargs = {}
+
+        try:
+            kwargs['subscriber'] = settings.get_subscriber_model().objects.get(
+                email=data["user_email"]
+            )
+        except settings.get_subscriber_model().DoesNotExist:
+            pass
+
+        try:
+            kwargs['plan'] = Plan.objects.get(pk=data.get("plan_id"))
+        except Plan.DoesNotExist:
+            print("Skipping, plan not found.")
+            return
+
+        # Now, create object with this pk.
+        sub = Subscription.objects.create(
+            id=pk,
+            cancel_url=data.get("cancel_url"),
+            checkout_id="", # ???
+            currency=data.get('last_payment').get("currency"),
+            email=data.get("user_email"),
+            event_time=timezone.now(), # ???
+            marketing_consent=data.get('marketing_consent'),
+            # next_bill_date can be null if user won't pay again...
+            next_bill_date=data.get("next_payment", {}).get("date", None),
+            passthrough="", # ???
+            quantity=data.get("last_payment", {}).get("amount", 0),
+            source="", # ???
+            status=data.get("state"),
+            unit_price=0.00, # ???
+            update_url = data.get('update_url'),
+            **kwargs
+        )
+        return sub
+
+    @classmethod
     def _sanitize_webhook_payload(cls, payload):
         data = {}
 
@@ -160,10 +208,14 @@ class Subscription(PaddleBaseModel):
         # transform `user_id` to subscriber ref
         data["subscriber"] = None
         subscriber_id = payload.pop("user_id", None)
-        if subscriber_id not in ["", None]:
-            data["subscriber"], created = settings.get_subscriber_model().objects.get_or_create(
-                email=payload["email"]
-            )
+        try:
+            if subscriber_id not in ["", None]:
+                data[
+                    "subscriber"] = settings.get_subscriber_model().objects.get(
+                    email=payload["email"]
+                )
+        except settings.get_subscriber_model().DoesNotExist:
+            pass
 
         # transform `subscription_plan_id` to plan ref
         data["plan"] = None
@@ -192,7 +244,7 @@ class Subscription(PaddleBaseModel):
     def update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
         pk = data.pop("id")
-        return cls.objects.update_or_create(pk, defaults=data)
+        return cls.objects.update_or_create(pk=pk, defaults=data)
 
     def __str__(self):
         return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
