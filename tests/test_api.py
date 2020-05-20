@@ -37,7 +37,7 @@ class TestAPIRequest(TestCase):
         request_mock.return_value = mock.Mock(ok=True)
         request_mock.return_value.json.return_value = data
 
-        api.api_request(method="get", uri="uri")
+        api.api_request(method="get", uri="uri", data={"fake": "data"})
 
         args, kwargs = request_mock.call_args
         self.assertIn("json", kwargs)
