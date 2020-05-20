@@ -1,7 +1,8 @@
 *.py[cod]
 __pycache__
 .pytest_cache
-
+.venv/
+venv/
 # C extensions
 *.so
 
