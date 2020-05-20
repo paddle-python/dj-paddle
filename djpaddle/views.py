@@ -51,7 +51,7 @@ class PaddleWebhookView(View):
 
         if alert_name in self.SUPPORTED_WEBHOOKS:
             signal = getattr(signals, alert_name, None)
-            if signal is not None:
+            if signal is not None:  # pragma: no cover
                 signal.send(sender=self.__class__, payload=payload)
 
         return HttpResponse()
