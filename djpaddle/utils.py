@@ -3,18 +3,15 @@ import collections
 
 import phpserialize
 from Crypto.PublicKey import RSA
-from django.core.exceptions import ImproperlyConfigured
-
-from . import settings
 
 try:
     from Crypto.Hash import SHA1
-except ImportError:
+except ImportError:  # pragma: no cover
     from Crypto.Hash import SHA as SHA1
 
 try:
     from Crypto.Signature import PKCS1_v1_5
-except ImportError:
+except ImportError:  # pragma: no cover
     from Crypto.Signature import pkcs1_15 as PKCS1_v1_5
 
 
@@ -26,15 +23,6 @@ def convert_pubkey_to_rsa(key):
     public_key_encoded = "".join(key.split("\n")[1:-1])
     public_key_der = base64.b64decode(public_key_encoded)
     return RSA.importKey(public_key_der)
-
-
-try:
-    key = convert_pubkey_to_rsa(settings.DJPADDLE_PUBLIC_KEY)
-except Exception as e:
-    msg = f"failed to convert 'DJPADDLE_PUBLIC_KEY'; original message: {e}"
-    raise ImproperlyConfigured(msg)
-
-verifier = PKCS1_v1_5.new(key)
 
 
 def is_valid_webhook(payload):
@@ -55,5 +43,9 @@ def is_valid_webhook(payload):
     digest = SHA1.new()
     digest.update(serialized_data)
     signature = base64.b64decode(signature)
+
+    from . import settings
+
+    verifier = PKCS1_v1_5.new(settings.DJPADDLE_KEY)
 
     return verifier.verify(digest, signature)

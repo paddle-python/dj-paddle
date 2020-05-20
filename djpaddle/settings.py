@@ -2,6 +2,8 @@ from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+from .utils import convert_pubkey_to_rsa
+
 DJPADDLE_API_BASE = getattr(
     settings, "DJPADDLE_API_BASE", "https://vendors.paddle.com/api/2.0/"
 )
@@ -17,6 +19,11 @@ DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY", None)
 DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY", None)
 if DJPADDLE_PUBLIC_KEY is None:
     raise ImproperlyConfigured("'DJPADDLE_PUBLIC_KEY' must be set")
+try:
+    DJPADDLE_KEY = convert_pubkey_to_rsa(DJPADDLE_PUBLIC_KEY)
+except Exception as e:
+    msg = f"failed to convert 'DJPADDLE_PUBLIC_KEY'; original message: {e}"
+    raise ImproperlyConfigured(msg)
 
 DJPADDLE_SUBSCRIBER_MODEL = getattr(
     settings, "DJPADDLE_SUBSCRIBER_MODEL", settings.AUTH_USER_MODEL
