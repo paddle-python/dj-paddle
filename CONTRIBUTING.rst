@@ -100,6 +100,7 @@ Ready to contribute? Here's how to set up `dj-paddle` for local development.
 6. When you're done making changes, check that your changes pass the tests.
    A quick test run can be done as follows::
 
+   $ pip install pytest-django pytest-cov
    $ DJPADDLE_TEST_DB_VENDOR=sqlite pytest --reuse-db
 
    You should also check that the tests pass with other python and Django versions with tox.
