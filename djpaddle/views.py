@@ -1,10 +1,10 @@
-from django.views.generic import View
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.views.generic import View
 
-from .utils import is_valid_webhook
 from . import signals
+from .utils import is_valid_webhook
 
 
 @method_decorator(csrf_exempt, name="dispatch")

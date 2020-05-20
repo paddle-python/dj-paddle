@@ -1,5 +1,5 @@
-from django.test.testcases import TestCase
 from django.http import HttpRequest
+from django.test.testcases import TestCase
 
 from djpaddle import context_processors
 

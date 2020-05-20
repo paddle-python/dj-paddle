@@ -1,12 +1,9 @@
-from copy import deepcopy
 from unittest import mock
 
-from django.test import TestCase
 from django.conf import settings
+from django.test import TestCase
 
 from djpaddle import api
-
-from . import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
 
 
 class TestAPIRequest(TestCase):

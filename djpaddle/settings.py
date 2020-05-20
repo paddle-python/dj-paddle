@@ -1,7 +1,6 @@
+from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.apps import apps as django_apps
-
 
 DJPADDLE_API_BASE = getattr(
     settings, "DJPADDLE_API_BASE", "https://vendors.paddle.com/api/2.0/"
