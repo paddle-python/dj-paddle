@@ -24,7 +24,7 @@ class TestAPIRequest(TestCase):
         self.assertRaises(api.APIException, api.api_request, method="get", uri="uri")
 
     @mock.patch("djpaddle.api.requests.request")
-    def test_api_request_raises_on_errpr(self, request_mock):
+    def test_api_request_raises_on_error(self, request_mock):
         request_mock.return_value = mock.Mock(ok=True)
         error_response = {"error": {"code": "1", "message": "Bad"}}
         request_mock.return_value.json.return_value = error_response
