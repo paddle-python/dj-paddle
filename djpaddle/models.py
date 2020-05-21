@@ -194,8 +194,7 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
-        pk = data.pop("id")
-        return cls.objects.update_or_create(pk, defaults=data)
+        return cls.objects.update_or_create(id=data["id"], defaults=data)
 
     def __str__(self):
         return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
