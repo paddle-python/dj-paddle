@@ -1,12 +1,9 @@
-from copy import deepcopy
 from unittest import mock
 
-from django.test import TestCase
 from django.conf import settings
+from django.test import TestCase
 
 from djpaddle import api
-
-from . import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
 
 
 class TestAPIRequest(TestCase):
@@ -16,7 +13,7 @@ class TestAPIRequest(TestCase):
         request_mock.return_value = mock.Mock(ok=True)
         request_mock.return_value.json.return_value = data
 
-        response = api.api_request(method="get", uri="uri")
+        response = api.retrieve(uri="uri")
         self.assertEqual(data["response"], response)
 
     @mock.patch("djpaddle.api.requests.request")
@@ -27,12 +24,20 @@ class TestAPIRequest(TestCase):
         self.assertRaises(api.APIException, api.api_request, method="get", uri="uri")
 
     @mock.patch("djpaddle.api.requests.request")
+    def test_api_request_raises_on_error(self, request_mock):
+        request_mock.return_value = mock.Mock(ok=True)
+        error_response = {"error": {"code": "1", "message": "Bad"}}
+        request_mock.return_value.json.return_value = error_response
+
+        self.assertRaises(api.APIError, api.api_request, method="get", uri="uri")
+
+    @mock.patch("djpaddle.api.requests.request")
     def test_api_request_assert_authentication(self, request_mock):
         data = {"response": ["response-data"]}
         request_mock.return_value = mock.Mock(ok=True)
         request_mock.return_value.json.return_value = data
 
-        api.api_request(method="get", uri="uri")
+        api.api_request(method="get", uri="uri", data={"fake": "data"})
 
         args, kwargs = request_mock.call_args
         self.assertIn("json", kwargs)

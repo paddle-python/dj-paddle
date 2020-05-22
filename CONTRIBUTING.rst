@@ -100,6 +100,7 @@ Ready to contribute? Here's how to set up `dj-paddle` for local development.
 6. When you're done making changes, check that your changes pass the tests.
    A quick test run can be done as follows::
 
+   $ pip install pytest-django pytest-cov
    $ DJPADDLE_TEST_DB_VENDOR=sqlite pytest --reuse-db
 
    You should also check that the tests pass with other python and Django versions with tox.
@@ -122,6 +123,14 @@ Ready to contribute? Here's how to set up `dj-paddle` for local development.
 9. Submit a pull request through the GitHub website.
 
 10. Congratulations, you're now a dj-paddle contributor!  Have some <3 from us.
+
+
+Webhook fixtures
+----------------
+
+A fixture for each of the Paddle webhook alerts have been placed at `tests/webhooks/fixtures/<alert_type>.txt`. These fixtures were generated from the output of the Webhook Alert Testing page - https://vendors.paddle.com/webhook-alert-test
+
+Please check the data before using it in a test if it has not been used before. It appears this Paddle features has some bugs and does not always set the sample data to a valid value. For example, according to https://paddle.com/docs/reference-using-webhooks/ the `marketing_consent` field can be either `0` or `1` but the sample data tool sent an empty value.
 
 
 Django Migration Policy

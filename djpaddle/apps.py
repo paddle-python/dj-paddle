@@ -6,4 +6,4 @@ class DjpaddleConfig(AppConfig):
     Configuration for the djpaddle Django application.
     """
 
-    name = 'djpaddle'
+    name = "djpaddle"

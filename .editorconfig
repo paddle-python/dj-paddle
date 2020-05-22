@@ -9,7 +9,22 @@ indent_style = space
 quote_type = double
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+[*.py]
 max_line_length = 88
+# isort
+default_section = THIRDPARTY
+known_first_party = djpaddle
+# black compatibility, as per
+# https://black.readthedocs.io/en/stable/the_black_code_style.html?highlight=.isort.cfg#how-black-wraps-lines
+multi_line_output = 3
+include_trailing_comma = True
+force_grid_wrap = 0
+use_parentheses = True
+line_length = 88
+skip_glob = .tox/*,*/migrations/*.py,*/__pycache__/*,*venv/*,docs/conf.py
+not_skip=__init__.py
+# end isort
 
 [*.{yml,yaml,json}]
 indent_size = 2

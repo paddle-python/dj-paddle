@@ -25,11 +25,10 @@ def api_request(method, uri, data=None, *args, **kwargs):
 
     data = resp.json()
 
-    if 'error' in data:
+    if "error" in data:
         raise APIError(
-            'API error code {code} - {message}'.format(
-                code=data['error']['code'],
-                message=data['error']['message']
+            "API error code {code} - {message}".format(
+                code=data["error"]["code"], message=data["error"]["message"]
             )
         )
 

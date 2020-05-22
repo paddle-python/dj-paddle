@@ -2,7 +2,6 @@ import os
 
 from Crypto.PublicKey import RSA
 
-
 DEFAULT_KEY_SIZE = 1024  # minimum = 1024
 
 

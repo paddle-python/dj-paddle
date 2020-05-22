@@ -15,10 +15,10 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-from django import setup as django_setup
-from django.conf import settings
+from django import setup as django_setup  # NOQA: E402
+from django.conf import settings  # NOQA: E402
 
-import djpaddle  # noqa
+import djpaddle  # NOQA: E402
 
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

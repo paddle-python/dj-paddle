@@ -1,9 +1,9 @@
 from django.db import models
 from django.db.models.signals import post_save
-from django.utils.translation import gettext_lazy as _
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
-from . import settings, signals, api
+from . import api, settings, signals
 from .fields import PaddleCurrencyCodeField
 
 
@@ -81,8 +81,7 @@ class Plan(PaddleBaseModel):
                 )
                 for currency, quantity in initial_price.items()
             ]
-            # re-create initial prices
-            + [
+            + [  # re-create initial prices
                 Price(
                     plan=plan,
                     currency=currency,
@@ -103,12 +102,13 @@ class Subscription(PaddleBaseModel):
     """
     'Subscription' represents a Paddle subscription.
 
-    They are automatically updated on behalf of the webhook calls 'subscription_created',
-    'subscription_updated' and 'subscription_cancelled'.
+    They are automatically updated on behalf of the webhook calls
+    'subscription_created', 'subscription_updated' and 'subscription_cancelled'.
 
-    Stale subscriptions that are not associated with a subscriber are being linked by comparing
-    the email addresses of the subscriber model and the subscription. Linking is optional and can
-    be configured through the settings ('DJPADDLE_LINK_STALE_SUBSCRIPTIONS').
+    Stale subscriptions that are not associated with a subscriber are being
+    linked by comparing the email addresses of the subscriber model and the
+    subscription. Linking is optional and can be configured through the
+    settings ('DJPADDLE_LINK_STALE_SUBSCRIPTIONS').
     """
 
     STATUS_ACTIVE = "active"
@@ -161,7 +161,10 @@ class Subscription(PaddleBaseModel):
         data["subscriber"] = None
         subscriber_id = payload.pop("user_id", None)
         if subscriber_id not in ["", None]:
-            data["subscriber"], created = settings.get_subscriber_model().objects.get_or_create(
+            (
+                data["subscriber"],
+                created,
+            ) = settings.get_subscriber_model().objects.get_or_create(
                 email=payload["email"]
             )
 
@@ -192,7 +195,7 @@ class Subscription(PaddleBaseModel):
     def update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
         pk = data.pop("id")
-        return cls.objects.update_or_create(pk, defaults=data)
+        return cls.objects.update_or_create(pk=pk, defaults=data)
 
     def __str__(self):
         return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
