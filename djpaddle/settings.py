@@ -8,12 +8,15 @@ DJPADDLE_API_BASE = getattr(
     settings, "DJPADDLE_API_BASE", "https://vendors.paddle.com/api/2.0/"
 )
 
-
 # can be found at https://vendors.paddle.com/authentication
-DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID", None)
+DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID")
+if not DJPADDLE_VENDOR_ID:
+    raise ImproperlyConfigured("'DJPADDLE_VENDOR_ID' must be set")
 
 # create one at https://vendors.paddle.com/authentication
-DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY", None)
+DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY")
+if not DJPADDLE_API_KEY:
+    raise ImproperlyConfigured("'DJPADDLE_API_KEY' must be set")
 
 # can be found at https://vendors.paddle.com/public-key
 DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY")
@@ -57,9 +60,10 @@ def get_subscriber_model():
             "that has not been installed.".format(model=model_name)
         )
 
-    if (
-        "email" not in [field_.name for field_ in subscriber_model._meta.get_fields()]
-    ) and not hasattr(subscriber_model, "email"):
+    subscriber_field_names = [
+        field_.name for field_ in subscriber_model._meta.get_fields()
+    ]
+    if "email" not in subscriber_field_names and not hasattr(subscriber_model, "email"):
         raise ImproperlyConfigured(
             "DJPADDLE_SUBSCRIBER_MODEL must have an email attribute."
         )
