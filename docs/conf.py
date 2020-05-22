@@ -38,7 +38,9 @@ settings.configure(
         "djpaddle",
     ],
     SITE_ID=1,
-    DJPADDLE_PUBLIC_KEY=os.environ.get("DJPADDLE_PUBLIC_KEY", ""),
+    DJPADDLE_VENDOR_ID="test-vendor-id",
+    DJPADDLE_API_KEY="test-api-key",
+    DJPADDLE_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtxEMePySQV6szQ+T6wAkv8Nhz\nxpUw1XzwpHkh5FU2TiPBbcyqL1sBWJeHsFY3jMnzohpajp4v11B9D5WisUvbyjIU\nnYbyU3qDzKe85nPA6gyASvsWW4mdVruVhqMxnoUj2o+H0KWbIdMJWMLF8pPqjynP\nxZHZ9ITbPXpwDtaMUQIDAQAB\n-----END PUBLIC KEY-----",  # NOQA
 )
 django_setup()
 
