@@ -16,8 +16,8 @@ DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID", None)
 DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY", None)
 
 # can be found at https://vendors.paddle.com/public-key
-DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY", None)
-if DJPADDLE_PUBLIC_KEY is None:
+DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY")
+if not DJPADDLE_PUBLIC_KEY:
     raise ImproperlyConfigured("'DJPADDLE_PUBLIC_KEY' must be set")
 try:
     DJPADDLE_KEY = convert_pubkey_to_rsa(DJPADDLE_PUBLIC_KEY)
