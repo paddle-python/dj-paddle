@@ -2,6 +2,24 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 
 
+def test_missing_djpaddle_vendor_id(settings):
+    settings.DJPADDLE_VENDOR_ID = None
+    from djpaddle import settings
+    from importlib import reload
+
+    with pytest.raises(ImproperlyConfigured):
+        reload(settings)
+
+
+def test_missing_djpaddle_api_key(settings):
+    settings.DJPADDLE_API_KEY = None
+    from djpaddle import settings
+    from importlib import reload
+
+    with pytest.raises(ImproperlyConfigured):
+        reload(settings)
+
+
 def test_missing_djpaddle_public_key(settings):
     settings.DJPADDLE_PUBLIC_KEY = None
     from djpaddle import settings
