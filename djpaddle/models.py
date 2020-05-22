@@ -24,7 +24,7 @@ class Price(PaddleBaseModel):
     recurring = models.BooleanField()
 
     def __str__(self):
-        return " ".join([str(self.quantity), self.currency])
+        return "{} {}".format(self.quantity, self.currency)
 
     class Meta:
         ordering = ["currency", "recurring"]

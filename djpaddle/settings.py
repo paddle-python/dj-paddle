@@ -22,7 +22,7 @@ if DJPADDLE_PUBLIC_KEY is None:
 try:
     DJPADDLE_KEY = convert_pubkey_to_rsa(DJPADDLE_PUBLIC_KEY)
 except Exception as e:
-    msg = f"failed to convert 'DJPADDLE_PUBLIC_KEY'; original message: {e}"
+    msg = "failed to convert 'DJPADDLE_PUBLIC_KEY'; original message: {}".format(e)
     raise ImproperlyConfigured(msg)
 
 DJPADDLE_SUBSCRIBER_MODEL = getattr(

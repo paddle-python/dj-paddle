@@ -27,7 +27,7 @@ class TestModelStrs(TestCase):
         price = Price.objects.create(
             plan=plan, currency=currency, quantity=quantity, recurring=True
         )
-        price_string = f"{quantity} {currency}"
+        price_string = "{} {}".format(quantity, currency)
         self.assertEqual(str(price), price_string)
 
     def test_subscription_str(self):
