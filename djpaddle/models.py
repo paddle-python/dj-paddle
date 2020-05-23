@@ -201,6 +201,16 @@ class Subscription(PaddleBaseModel):
         return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
 
 
+class Checkout(models.Model):
+    # Backup model used to store checkout info from PaddleJS. Acts as
+    # a backup in case the webhook is not recieved straight away
+    id = models.CharField(max_length=40, primary_key=True)
+    completed = models.BooleanField()
+    passthrough = models.TextField(blank=True)
+    email = models.EmailField(blank=True)
+    created_at = models.DateTimeField()
+
+
 @receiver(signals.subscription_created)
 def on_subscription_created(sender, payload, *args, **kwargs):
     Subscription.from_subscription_created(payload)

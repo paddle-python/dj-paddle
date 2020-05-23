@@ -1,9 +1,14 @@
-from django.http import HttpResponse, HttpResponseBadRequest
+from distutils.util import strtobool
+
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
+from django.views.generic.edit import BaseCreateView
 
 from . import signals
+from .models import Checkout
 from .utils import is_valid_webhook
 
 
@@ -45,16 +50,38 @@ class PaddleWebhookView(View):
         if not is_valid_webhook(payload):
             return HttpResponseBadRequest("webhook validation failed")
 
-        alert_name = payload.get("alert_name", None)
-        if alert_name is None:
+        alert_name = payload.get("alert_name")
+        if not alert_name:
             return HttpResponseBadRequest("'alert_name' missing")
 
         if alert_name in self.SUPPORTED_WEBHOOKS:
-            signal = getattr(signals, alert_name, None)
-            if signal is not None:  # pragma: no cover
+            signal = getattr(signals, alert_name)
+            if signal:  # pragma: no cover
                 signal.send(sender=self.__class__, payload=payload)
 
         return HttpResponse()
 
 
+class PaddleCheckoutApiView(BaseCreateView):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST.dict()
+        pk = data.pop("id")
+        if not pk:
+            return HttpResponseBadRequest('Missing "id"')
+        try:
+            data["completed"] = bool(strtobool(data["completed"]))
+        except KeyError:
+            return HttpResponseBadRequest('Missing "completed"')
+
+        try:
+            Checkout.objects.update_or_create(pk=pk, defaults=data)
+        except ValidationError as e:
+            return HttpResponseBadRequest(e)
+
+        return JsonResponse({}, status=204)
+
+
 paddle_webhook_view = PaddleWebhookView.as_view()
+checkout_api_view = PaddleCheckoutApiView.as_view()
