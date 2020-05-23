@@ -11,7 +11,7 @@ from djpaddle.models import Checkout
 class TestWebhook(TestCase):
     def _api_request(self, data):
         return Client().post(
-            reverse("djpaddle:checkout_api"),
+            reverse("djpaddle:post_checkout_api"),
             data,
             content_type="application/x-www-form-urlencoded",
         )

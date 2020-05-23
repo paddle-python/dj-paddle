@@ -62,7 +62,7 @@ class PaddleWebhookView(View):
         return HttpResponse()
 
 
-class PaddleCheckoutApiView(BaseCreateView):
+class PaddlePostCheckoutApiView(BaseCreateView):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
@@ -84,4 +84,4 @@ class PaddleCheckoutApiView(BaseCreateView):
 
 
 paddle_webhook_view = PaddleWebhookView.as_view()
-checkout_api_view = PaddleCheckoutApiView.as_view()
+post_checkout_api_view = PaddlePostCheckoutApiView.as_view()
