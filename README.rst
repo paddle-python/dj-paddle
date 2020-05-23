@@ -69,12 +69,91 @@ Add your paddle keys and set the operating mode:
     # can be found at https://vendors.paddle.com/public-key
     DJPADDLE_PUBLIC_KEY = '<your-public-key>'
 
+djpaddle includes ``vendor_id`` template context processor which adds your vendor ID as ``DJPADDLE_VENDOR_ID`` to each template context
+
+.. code-block:: python
+
+    TEMPLATES = [
+    {
+        ...
+        'OPTIONS': {
+            ...
+            'context_processors': [
+                ...
+                'djpaddle.context_processors.vendor_id',
+                ...
+            ]
+        }
+    }
+
+
 Run the commands::
 
     python manage.py migrate
 
     # fetches all subscription plans from paddle
     python manage.py djpaddle_sync_plans_from_paddle
+
+
+Paddle Checkout
+---------------
+
+Next to setup a `PaddleJS checkout page <https://developer.paddle.com/guides/how-tos/checkout/paddle-checkout>`_
+
+First load in PaddleJS and initialise it by including the dj-paddle PaddleJS template in your own template to load PaddleJS::
+
+    {% include "djpaddle_paddlejs.html" %}
+
+
+Next add a Paddle product or subscription plan into the page context. Below is an example of how to do this using a class based view where ``plan_id`` is passed through as a value from the URL
+
+.. code-block:: python
+
+    from django.conf import settings
+    from django.views.generic import TemplateView
+
+    from djpaddle.models import Plan
+
+
+    class Checkout(TemplateView):
+        template_name = 'checkout.html'
+
+        def get_context_data(self, **kwargs):
+            context = super().get_context_data(**kwargs)
+
+            context['paddle_plan'] = Plan.objects.get(pk=kwargs['plan_id'])
+            # If you have not added 'djpaddle.context_processors.vendor_id' as a template context processors
+            context['DJPADDLE_VENDOR_ID'] = settings.DJPADDLE_VENDOR_ID
+
+            return context
+
+
+Finally put a ``Buy Now!`` button for the plan subscription you added to the context ::
+
+    <a href="#!" class="paddle_button" data-product="{{ paddle_plan.id }}">Buy Now!</a>
+
+
+You can pass data to Paddle JS by add data attributes to the button. For example to set the users email you can use the ``data-email`` attribute ::
+
+    <a href="#!" class="paddle_button" data-product="{{ paddle_plan.id }}" data-email="{{ user.email }}" >Buy Now!</a>
+
+
+A full list of parameters can be found on the `PaddleJS parameters page <https://developer.paddle.com/webhook-reference/intro>`_
+
+Subscription model
+------------------
+
+You can override the model that subscriptions are attached to using the ``DJPADDLE_SUBSCRIBER_MODEL`` setting. This setting must use the string model reference in the style 'app_label.ModelName'.
+
+The model chosen must have an ``email`` field.
+
+.. code-block:: python
+
+    # Defaults to AUTH_USER_MODEL
+    DJPADDLE_SUBSCRIBER_MODEL = 'myapp.MyModel'
+
+**Warning**: To use this setting you must have already created and ran the initial migration for the app/model before adding ``djpadding`` to ``INSTALLED_APPS``.
+
 
 
 Reporting Security Issues
