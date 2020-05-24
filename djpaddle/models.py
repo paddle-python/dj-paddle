@@ -197,8 +197,11 @@ class Subscription(PaddleBaseModel):
 
 
 class Checkout(models.Model):
-    # Backup model used to store checkout info from PaddleJS. Acts as
-    # a backup in case the webhook is not recieved straight away
+    """
+    Used to store checkout info from PaddleJS. Acts as
+    a backup in case the webhook is not recieved straight away
+    """
+
     id = models.CharField(max_length=40, primary_key=True)
     completed = models.BooleanField()
     passthrough = models.TextField(blank=True)

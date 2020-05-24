@@ -67,6 +67,7 @@ class PaddlePostCheckoutApiView(BaseCreateView):
 
     def post(self, request, *args, **kwargs):
         data = request.POST.dict()
+        redirect_url = data.pop("redirect_url") if "redirect_url" in data else ""
         pk = data.pop("id")
         if not pk:
             return HttpResponseBadRequest('Missing "id"')
@@ -79,6 +80,15 @@ class PaddlePostCheckoutApiView(BaseCreateView):
             Checkout.objects.update_or_create(pk=pk, defaults=data)
         except ValidationError as e:
             return HttpResponseBadRequest(e)
+
+        next_url = request.GET.get("next")
+        if next_url:
+            next_url = "{0}?checkout={1}".format(next_url, pk)
+            return JsonResponse({"redirect_url": next_url}, status=200)
+
+        if redirect_url:
+            redirect_url = "{0}?checkout={1}".format(redirect_url, pk)
+            return JsonResponse({"redirect_url": redirect_url}, status=200)
 
         return JsonResponse({}, status=204)
 

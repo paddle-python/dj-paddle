@@ -13,7 +13,7 @@ To use `Paddle checkout <https://developer.paddle.com/guides/how-tos/checkout/pa
 
 
 .. note::
-    You need to have added the ``djpaddle.context_processors.vendor_id`` template context processor or manually added ``DJPADDLE_VENDOR_ID`` to your context.
+    You need to have added the ``djpaddle.context_processors.vendor_id`` template context processor or manually add ``DJPADDLE_VENDOR_ID`` to your context.
 
 If you want to customise the Paddle setup you can manually add PaddleJS and ``Paddle.Setup`` manually with:
 
@@ -25,6 +25,7 @@ If you want to customise the Paddle setup you can manually add PaddleJS and ``Pa
         vendor:  {{ DJPADDLE_VENDOR_ID }},
     });
     </script>
+
 
 
 Checkout buttons
@@ -53,30 +54,91 @@ To use it you need to add the following to your template::
     {% include "djpaddle_post_checkout.html" %}
 
 
-This is done by automatically registering a Paddle ``successCallback`` onto any html element with the ``paddle_button`` class. This ``successCallback`` does an API request to a dj-paddle endpoint to save Checkout data.
+This is done by automatically registering a Paddle ``successCallback`` onto any HTML element with the ``paddle_button`` class. ```successCallback`` then does an API request to a dj-paddle endpoint to save Checkout data.
 
-You can then get order details straight away using a ``post_save`` receiver on the ``Checkout`` model and using the `Paddle API getorder <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ endpoint
+
+Redirect after checkout
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to redirect the user after the checkout process is complete while using ``djpaddle_post_checkout.html`` you can add a  context variable called ``djpaddle_checkout_success_redirect``.
+
+This will then redirect the user after the checkout data has been saved. The redirect will also include a checkout query parameter ``?checkout={checkout_id}`` so you can look up the checkout information on the redirected page.
+
+
+Post-Checkout Order Information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once the user has completed an order you app will need to find out about the order details from Paddle. There are several ways you can do this.
+
+.. note::
+    As `Paddle Post Checkout Order Information <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ states, order processing may take a few seconds after the transaction to complete. Keep this in mind when using the below.
+
+
+1. Using the redirect URL above and the `checkout` query parameter For example:
+
+.. code-block:: python
+
+    class CheckoutSuccess(TemplateView):
+        template_name = 'checkout_success.html'
+
+        def get(self, request, *args, **kwargs):
+            context = self.get_context_data(**kwargs)
+            checkout_id = request.GET['checkout']
+            # Get checkout and subscription data here
+            ...
+            return self.render_to_response(context)
+
+
+2. Using a ``post_save`` receiver on the ``Checkout`` model and using the `Paddle API getorder <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ endpoint
 
 .. code-block:: python
 
     from djpaddle.models import Checkout, Subscription
 
 
-    def PaddlecheckoutReciever(sender, instance, created, **kwargs):
+    def paddle_checkout_reciever(sender, instance, created, **kwargs):
         if created:
             # Get checkout and subscription data here
 
 
-    post_save.connect(PaddlecheckoutReciever, sender=Checkout)
+    post_save.connect(paddle_checkout_reciever, sender=Checkout)
 
 
-Another option is a background task to compare each ``Checkout.id`` against each ``Subscription.checkout_id`` to ensure no Webhooks have been missed.
+
+Keeping checkout information in sync
+------------------------------------
+
+Due to Paddles checkout flow, it could be possible to miss checkout data and your system not to be in sync with Paddle. Because of this, you may want to ensure your data is in sync with Paddle.
 
 
-Other post checkout options
----------------------------
+Using the dj-paddle checkout model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you want to manually configure what your happens after a checkout has been completed instead of using the ``checkout_push.html`` template please see:
+If you have been using the ``djpaddle_post_checkout.html`` template you should have a record of each successful checkout in the djpaddle Checkout model. This model can then be used to compare each ``Checkout.id`` against each ``Subscription.checkout_id`` to ensure no Webhooks have been missed.
 
+More info and management command coming soon
+
+
+Using Paddle's Webhook history
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Retrieving past events and alerts that Paddle has sent via webhooks using the `Get Webhook History API <https://developer.paddle.com/api-reference/alert-api/webhooks/webhooks>`_. They should be replayed in the order they were created.
+
+More info and management command coming soon
+
+
+
+Other Paddle post checkout options
+----------------------------------
+
+If you want to manually configure what happens after a checkout has been completed instead of using the ``checkout_push.html`` template please see:
+
+- `Order Information <https://paddle.com/docs/paddlejs-order-information/>`_
 - `Paddles Post checkout page <https://developer.paddle.com/guides/how-tos/checkout/post-checkout>`_
 - `Paddles Checkout Events page <https://developer.paddle.com/reference/paddle-js/checkout-events>`_
+
+.. note::
+    - Subscriptions currently do not have an option within Paddle to set a redirect URL via the seller dashboard
+    - For normal products, using the ``successCallback`` or ``data-success-callback`` will override any success redirect set in your Seller Dashboard. This includes using the ``djpaddle_post_checkout`` template above
+    - When redirecting using the ``data-success`` attribute (`mentioned here <https://paddle.com/support/how-can-i-redirect-buyers-upon-completing-the-checkout/>`_), the redirect URL will **NOT** receive a checkout query parameter (``checkout={checkout_hash}``). Because of this, it is not advised to use this as the redirect provides no information about the checkout that has just been completed
+    - If you still want to use ``data-success`` ensure the value is set to the full URL of your application using ``request.build_absolute_uri()``

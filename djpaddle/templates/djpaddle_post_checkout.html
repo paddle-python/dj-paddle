@@ -4,13 +4,8 @@
 function checkoutComplete(data) {
     var csrftoken = document.getElementById("csrf").getElementsByTagName("input")[0].value;
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "{% url 'djpaddle:post_checkout_api' %}");
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-
-    var email = '';
-    if (data.hasOwnProperty('user') && data.user !== null){
+    var email = "";
+    if (data.hasOwnProperty("user") && data.user !== null){
         email = data.user.email;
     }
     var postData = {
@@ -19,27 +14,42 @@ function checkoutComplete(data) {
         passthrough: data.checkout.passthrough,
         email: email,
         created_at: data.checkout.created_at,
+        redirect_url: data.checkout.redirect_url,
     };
     var encodedString = buildFormData(postData);
 
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "{% url 'djpaddle:post_checkout_api' %}?next={{ djpaddle_checkout_success_redirect }}");
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+    xhr.onreadystatechange = function(){
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                var jsonResponse = JSON.parse(xhr.responseText);
+                if (jsonResponse.hasOwnProperty("redirect_url")) {
+                    window.location.href = jsonResponse["redirect_url"];
+                }
+            }
+        }
+    }
     xhr.send(encodedString);
 }
 
 function buildFormData(data) {
-    var encodedString = '';
+    var encodedString = "";
     for (var prop in data) {
         if (data.hasOwnProperty(prop)) {
             if (encodedString.length > 0) {
-                encodedString += '&';
+                encodedString += "&";
             }
-            encodedString += encodeURI(prop + '=' + data[prop]);
+            encodedString += encodeURI(prop + "=" + data[prop]);
         }
     }
     return encodedString;
 }
 
 function addCheckoutCompleteToPaddleButtons() {
-    paddleButtons = document.getElementsByClassName("paddle_button");
+    var paddleButtons = document.getElementsByClassName("paddle_button");
     for (var k in paddleButtons) {
         if (paddleButtons.hasOwnProperty(k)) {
             paddleButtons[k].setAttribute("data-success-callback", "checkoutComplete");
@@ -48,6 +58,6 @@ function addCheckoutCompleteToPaddleButtons() {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    addCheckoutCompleteToPaddleButtons()
+    addCheckoutCompleteToPaddleButtons();
 });
 </script>
