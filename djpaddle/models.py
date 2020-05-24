@@ -187,12 +187,7 @@ class Subscription(PaddleBaseModel):
         return data
 
     @classmethod
-    def from_subscription_created(cls, payload):
-        data = cls._sanitize_webhook_payload(payload)
-        return cls.objects.get_or_create(**data)
-
-    @classmethod
-    def update_by_payload(cls, payload):
+    def create_or_update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
         pk = data.pop("id")
         return cls.objects.update_or_create(pk=pk, defaults=data)
@@ -213,17 +208,17 @@ class Checkout(models.Model):
 
 @receiver(signals.subscription_created)
 def on_subscription_created(sender, payload, *args, **kwargs):
-    Subscription.from_subscription_created(payload)
+    Subscription.create_or_update_by_payload(payload)
 
 
 @receiver(signals.subscription_updated)
 def on_subscription_updated(sender, payload, *args, **kwargs):
-    Subscription.update_by_payload(payload)
+    Subscription.create_or_update_by_payload(payload)
 
 
 @receiver(signals.subscription_cancelled)
 def on_subscription_cancelled(sender, payload, *args, **kwargs):
-    Subscription.update_by_payload(payload)
+    Subscription.create_or_update_by_payload(payload)
 
 
 if settings.DJPADDLE_LINK_STALE_SUBSCRIPTIONS:
