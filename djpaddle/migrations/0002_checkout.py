@@ -14,10 +14,10 @@ class Migration(migrations.Migration):
             name='Checkout',
             fields=[
                 ('id', models.CharField(max_length=40, primary_key=True, serialize=False)),
-                ('completed', models.BooleanField()),
-                ('passthrough', models.TextField(blank=True)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('created_at', models.DateTimeField()),
+                ('completed', models.NullBooleanField()),
+                ('passthrough', models.TextField(blank=True, null=True)),
+                ('email', models.EmailField(blank=True, max_length=254, null=True)),
+                ('created_at', models.DateTimeField(blank=True, null=True)),
             ],
         ),
     ]

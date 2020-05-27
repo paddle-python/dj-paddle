@@ -198,15 +198,15 @@ class Subscription(PaddleBaseModel):
 
 class Checkout(models.Model):
     """
-    Used to store checkout info from PaddleJS. Acts as
+    Used to store checkout info from PaddleJS. Transient model which acts as
     a backup in case the webhook is not recieved straight away
     """
 
     id = models.CharField(max_length=40, primary_key=True)
-    completed = models.BooleanField()
-    passthrough = models.TextField(blank=True)
-    email = models.EmailField(blank=True)
-    created_at = models.DateTimeField()
+    completed = models.NullBooleanField()
+    passthrough = models.TextField(null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
 
 
 @receiver(signals.subscription_created)
