@@ -1,0 +1,9 @@
+<script src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script type="text/javascript">
+Paddle.Setup({
+    vendor:  {{ DJPADDLE_VENDOR_ID }},
+    {% if debug %}
+    debug: true,
+    {% endif %}
+});
+</script>

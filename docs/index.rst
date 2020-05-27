@@ -13,6 +13,7 @@ Contents:
    :maxdepth: 2
 
    getting_started
+   paddle_checkout
 
 
 Indices and tables

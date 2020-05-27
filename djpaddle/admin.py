@@ -2,6 +2,8 @@ from django.contrib import admin
 
 from . import models
 
+admin.site.register(models.Checkout)
+
 
 class PriceInline(admin.TabularInline):
     model = models.Price

@@ -1,0 +1,63 @@
+<div id="csrf">{% csrf_token %}</div>
+<script type="text/javascript">
+
+function checkoutComplete(data) {
+    var csrftoken = document.getElementById("csrf").getElementsByTagName("input")[0].value;
+
+    var email = "";
+    if (data.hasOwnProperty("user") && data.user !== null){
+        email = data.user.email;
+    }
+    var postData = {
+        id: data.checkout.id,
+        completed: data.checkout.completed,
+        passthrough: data.checkout.passthrough,
+        email: email,
+        created_at: data.checkout.created_at,
+        redirect_url: data.checkout.redirect_url,
+    };
+    var encodedString = buildFormData(postData);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "{% url 'djpaddle:post_checkout_api' %}?next={{ djpaddle_checkout_success_redirect }}");
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+    xhr.onreadystatechange = function(){
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                var jsonResponse = JSON.parse(xhr.responseText);
+                if (jsonResponse.hasOwnProperty("redirect_url")) {
+                    window.location.href = jsonResponse["redirect_url"];
+                }
+            }
+        }
+    }
+    xhr.send(encodedString);
+}
+
+function buildFormData(data) {
+    var encodedString = "";
+    for (var prop in data) {
+        if (data.hasOwnProperty(prop)) {
+            if (encodedString.length > 0) {
+                encodedString += "&";
+            }
+            encodedString += encodeURI(prop + "=" + data[prop]);
+        }
+    }
+    return encodedString;
+}
+
+function addCheckoutCompleteToPaddleButtons() {
+    var paddleButtons = document.getElementsByClassName("paddle_button");
+    for (var k in paddleButtons) {
+        if (paddleButtons.hasOwnProperty(k)) {
+            paddleButtons[k].setAttribute("data-success-callback", "checkoutComplete");
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    addCheckoutCompleteToPaddleButtons();
+});
+</script>
