@@ -98,7 +98,7 @@ class Plan(PaddleBaseModel):
         return plan
 
     def __str__(self):
-        return "Plan <{}:{}>".format(self.name, str(self.id))
+        return "{}:{}".format(self.name, self.id)
 
 
 class Subscription(PaddleBaseModel):
@@ -196,7 +196,7 @@ class Subscription(PaddleBaseModel):
         return cls.objects.update_or_create(pk=pk, defaults=data)
 
     def __str__(self):
-        return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
+        return "{}:{}".format(self.subscriber, self.id)
 
 
 class Checkout(models.Model):
