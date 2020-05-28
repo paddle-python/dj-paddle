@@ -1,3 +1,5 @@
+import os
+
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -12,11 +14,12 @@ DJPADDLE_API_BASE = getattr(
 DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID")
 if not DJPADDLE_VENDOR_ID:
     raise ImproperlyConfigured("'DJPADDLE_VENDOR_ID' must be set")
-
+os.environ["PADDLE_VENDOR_ID"] = DJPADDLE_VENDOR_ID
 # create one at https://vendors.paddle.com/authentication
 DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY")
 if not DJPADDLE_API_KEY:
     raise ImproperlyConfigured("'DJPADDLE_API_KEY' must be set")
+os.environ["PADDLE_API_KEY"] = DJPADDLE_API_KEY
 
 # can be found at https://vendors.paddle.com/public-key
 DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY")

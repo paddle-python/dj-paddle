@@ -2,9 +2,12 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from paddle import Paddle
 
-from . import api, settings, signals
+from . import settings, signals
 from .fields import PaddleCurrencyCodeField
+
+PADDLE_CLIENT = Paddle()
 
 
 class PaddleBaseModel(models.Model):
@@ -57,7 +60,7 @@ class Plan(PaddleBaseModel):
 
     @classmethod
     def api_list(cls):
-        return api.retrieve(uri=cls.PADDLE_URI_LIST)
+        return PADDLE_CLIENT.list_plans()
 
     @classmethod
     def sync_from_paddle_data(cls, data):

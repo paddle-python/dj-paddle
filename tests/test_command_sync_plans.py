@@ -37,15 +37,11 @@ FAKE_PLAN_API_RESPONSE = [
 
 
 class TestSyncPlans(TestCase):
-    @mock.patch("djpaddle.api.requests.request")
-    def test_command(self, request_mock):
-        data = {"response": FAKE_PLAN_API_RESPONSE}
-        request_mock.return_value = mock.Mock(ok=True)
-        request_mock.return_value.json.return_value = data
+    @mock.patch("djpaddle.models.Paddle.list_plans")
+    def test_command(self, paddle_list_plans):
+        paddle_list_plans.return_value = FAKE_PLAN_API_RESPONSE
 
-        args = []
-        opts = {}
-        call_command("djpaddle_sync_plans_from_paddle", *args, **opts)
+        call_command("djpaddle_sync_plans_from_paddle")
 
         plans = Plan.objects.all()
         self.assertEqual(plans.count(), len(FAKE_PLAN_API_RESPONSE))

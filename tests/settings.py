@@ -96,7 +96,7 @@ MIDDLEWARE = (
 
 STATIC_URL = "/static/"
 
-DJPADDLE_VENDOR_ID = "test-vendor-id"
+DJPADDLE_VENDOR_ID = "123"
 DJPADDLE_KEY = utils.generate_private_key()
 DJPADDLE_PUBLIC_KEY = utils.export_pubkey_as_pem(DJPADDLE_KEY)
 DJPADDLE_API_KEY = "test-api-key"
