@@ -18,22 +18,6 @@ class PaddleBaseModel(models.Model):
         abstract = True
 
 
-class Price(PaddleBaseModel):
-    plan = models.ForeignKey(
-        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
-    )
-    currency = PaddleCurrencyCodeField()
-    quantity = models.FloatField()
-    recurring = models.BooleanField()
-
-    def __str__(self):
-        return "{} {}".format(self.quantity, self.currency)
-
-    class Meta:
-        ordering = ["currency", "recurring"]
-        unique_together = ("plan", "currency", "recurring")
-
-
 class Plan(PaddleBaseModel):
     """
     'Plan' represents a Paddle subscription plan.
@@ -101,6 +85,22 @@ class Plan(PaddleBaseModel):
         return "{}:{}".format(self.name, self.id)
 
 
+class Price(PaddleBaseModel):
+    plan = models.ForeignKey(
+        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
+    )
+    currency = PaddleCurrencyCodeField()
+    quantity = models.FloatField()
+    recurring = models.BooleanField()
+
+    def __str__(self):
+        return "{} {}".format(self.quantity, self.currency)
+
+    class Meta:
+        ordering = ["currency", "recurring"]
+        unique_together = ("plan", "currency", "recurring")
+
+
 class Subscription(PaddleBaseModel):
     """
     'Subscription' represents a Paddle subscription.
@@ -119,7 +119,7 @@ class Subscription(PaddleBaseModel):
     STATUS_PAST_DUE = "past_due"
     STATUS_PAUSED = "paused"
     STATUS_DELETED = "deleted"
-    STATUS = (
+    STATUS_CHOICES = (
         (STATUS_ACTIVE, _("active")),
         (STATUS_TRIALING, _("trialing")),
         (STATUS_PAST_DUE, _("past due")),
@@ -146,8 +146,8 @@ class Subscription(PaddleBaseModel):
     passthrough = models.TextField()
     quantity = models.IntegerField()
     source = models.URLField()
-    status = models.CharField(choices=STATUS, max_length=16)
-    plan = models.ForeignKey("djpaddle.Plan", on_delete=models.CASCADE)
+    status = models.CharField(choices=STATUS_CHOICES, max_length=16)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     unit_price = models.FloatField()
     update_url = models.URLField()
 
