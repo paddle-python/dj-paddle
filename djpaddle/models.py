@@ -148,25 +148,23 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def _sanitize_webhook_payload(cls, payload):
         data = {}
-
-        data["id"] = payload.pop("subscription_id", None)
+        data["id"] = payload.pop("subscription_id")
 
         # transform `user_id` to subscriber ref
-        data["subscriber"] = None
-        subscriber_id = payload.pop("user_id", None)
-        if subscriber_id not in ["", None]:
-            (
-                data["subscriber"],
-                created,
-            ) = settings.get_subscriber_model().objects.get_or_create(
+        Subscriber = settings.get_subscriber_model()
+        try:
+            data["subscriber"], created, = Subscriber.objects.get_or_create(
                 email=payload["email"]
             )
+        except Subscriber.DoesNotExist:
+            data["subscriber"] = None
 
         # transform `subscription_plan_id` to plan ref
-        data["plan"] = None
-        plan_id = payload.pop("subscription_plan_id", None)
-        if plan_id not in ["", None]:
+        plan_id = payload.pop("subscription_plan_id")
+        try:
             data["plan"] = Plan.objects.get(pk=plan_id)
+        except Plan.DoesNotExist:
+            data["plan"] = None
 
         # sanitize fields
         valid_field_names = [field.name for field in cls._meta.get_fields()]
