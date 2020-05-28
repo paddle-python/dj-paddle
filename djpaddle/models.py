@@ -48,36 +48,27 @@ class Plan(PaddleBaseModel):
 
     @classmethod
     def sync_from_paddle_data(cls, data):
-        pk = data.pop("id", None)
-        initial_price = data.pop("initial_price", [])
-        recurring_price = data.pop("recurring_price", [])
+        pk = data.pop("id")
+        initial_price = data.pop("initial_price", {})
+        recurring_price = data.pop("recurring_price", {})
 
-        plan, _ = cls.objects.get_or_create(pk=pk, defaults=data)
+        plan, __ = cls.objects.get_or_create(pk=pk, defaults=data)
 
-        # drop all existing prices
+        # drop all existing prices and recreate them
         plan.prices.all().delete()
+        prices = []
+        for currency, quantity in initial_price.items():
+            price = Price(
+                plan=plan, currency=currency, quantity=float(quantity), recurring=False,
+            )
+            prices.append(price)
+        for currency, quantity in recurring_price.items():
+            price = Price(
+                plan=plan, currency=currency, quantity=float(quantity), recurring=True,
+            )
+            prices.append(price)
 
-        Price.objects.bulk_create(
-            # re-create initial prices
-            [
-                Price(
-                    plan=plan,
-                    currency=currency,
-                    quantity=float(quantity),
-                    recurring=False,
-                )
-                for currency, quantity in initial_price.items()
-            ]
-            + [  # re-create initial prices
-                Price(
-                    plan=plan,
-                    currency=currency,
-                    quantity=float(quantity),
-                    recurring=True,
-                )
-                for currency, quantity in recurring_price.items()
-            ]
-        )
+        Price.objects.bulk_create(prices)
 
         return plan
 
