@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from paddle import Paddle
 
@@ -181,8 +184,17 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def create_or_update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
-        pk = data.pop("id")
-        return cls.objects.update_or_create(pk=pk, defaults=data)
+        pk = data.get("id")
+        try:
+            subscription = cls.objects.get(pk=pk)
+        except cls.DoesNotExist:
+            return cls.objects.create(pk=pk, **data)
+
+        event_time = datetime.strptime(data["event_time"], "%Y-%m-%d %H:%M:%S")
+        local_time_zone = timezone.get_default_timezone()
+        data["event_time"] = timezone.make_aware(event_time, local_time_zone)
+        if subscription.event_time < data["event_time"]:
+            cls.objects.filter(pk=pk).update(**data)
 
     def __str__(self):
         return "{}:{}".format(self.subscriber, self.id)
@@ -202,17 +214,9 @@ class Checkout(models.Model):
 
 
 @receiver(signals.subscription_created)
-def on_subscription_created(sender, payload, *args, **kwargs):
-    Subscription.create_or_update_by_payload(payload)
-
-
 @receiver(signals.subscription_updated)
-def on_subscription_updated(sender, payload, *args, **kwargs):
-    Subscription.create_or_update_by_payload(payload)
-
-
 @receiver(signals.subscription_cancelled)
-def on_subscription_cancelled(sender, payload, *args, **kwargs):
+def subscription_event(sender, payload, *args, **kwargs):
     Subscription.create_or_update_by_payload(payload)
 
 

@@ -1,7 +1,8 @@
 from copy import deepcopy
+from datetime import datetime, timedelta
 from os.path import abspath, dirname, join
 from unittest import mock
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -91,14 +92,11 @@ class TestWebhook(TestCase):
             trial_days=0,
         )
         self._send_alert_urlencoded(create_payload)
-        subscription = Subscription.objects.get(email=create_data["email"][0])
-        self.assertEqual(subscription.email, "branson.nikolaus@example.org")
-        self.assertEqual(subscription.quantity, int(create_data["quantity"][0]))
 
         update_payload = self.load_fixture("subscription_updated.txt")
         updated_data = parse_qs(update_payload)
         self._send_alert_urlencoded(update_payload)
-        subscription = Subscription.objects.get(id=subscription.id)
+        subscription = Subscription.objects.get(email=create_data["email"][0])
         self.assertEqual(subscription.email, "branson.nikolaus@example.org")
         self.assertEqual(subscription.quantity, int(updated_data["new_quantity"][0]))
 
@@ -124,3 +122,43 @@ class TestWebhook(TestCase):
         self._send_alert_urlencoded(delete_payload)
         subscription = Subscription.objects.get(id=subscription.id)
         self.assertEqual(subscription.status, delete_data["status"][0])
+
+    @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
+    def test_subscription_updated_webhook_previous_event(self, is_valid_webhook):
+        create_payload = self.load_fixture("subscription_created.txt")
+        create_data = parse_qs(create_payload)
+        Plan.objects.create(
+            pk=int(create_data["subscription_plan_id"][0]),
+            name="monthly-subscription",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
+        self._send_alert_urlencoded(create_payload)
+
+        update_payload = self.load_fixture("subscription_updated.txt")
+
+        # parse_qs returns all values as lists, urlencode then takes the lists
+        # and creates bad form data. So we flattern single list elements
+        updated_data = {}
+        for key, value in parse_qs(update_payload).items():
+            if isinstance(value, list) and len(value) == 1:
+                updated_data[key] = value[0]
+            else:
+                updated_data[key] = value
+
+        subscription_id = updated_data["subscription_id"]
+        subscription = Subscription.objects.get(pk=subscription_id)
+        self.assertEqual(subscription.status, "active")
+
+        datetime_format = "%Y-%m-%d %H:%M:%S"
+        event_time = updated_data["event_time"]
+        event_time = datetime.strptime(event_time, datetime_format)
+        event_time = event_time - timedelta(days=1)
+        updated_data["event_time"] = event_time.strftime(datetime_format)
+        updated_data["status"] = "paused"
+
+        updated_payload = urlencode(updated_data)
+        self._send_alert_urlencoded(updated_payload)
+        subscription = Subscription.objects.get(pk=subscription_id)
+        self.assertEqual(subscription.status, "active")
