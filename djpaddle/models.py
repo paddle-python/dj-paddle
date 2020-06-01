@@ -9,7 +9,7 @@ from paddle import Paddle
 
 from . import settings, signals
 from .fields import PaddleCurrencyCodeField
-
+from .utils import PADDLE_DATETIME_FORMAT
 
 PADDLE_CLIENT = Paddle(
     vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
@@ -193,7 +193,7 @@ class Subscription(PaddleBaseModel):
         except cls.DoesNotExist:
             return cls.objects.create(pk=pk, **data)
 
-        event_time = datetime.strptime(data["event_time"], "%Y-%m-%d %H:%M:%S")
+        event_time = datetime.strptime(data["event_time"], PADDLE_DATETIME_FORMAT)
         local_time_zone = timezone.get_default_timezone()
         data["event_time"] = timezone.make_aware(event_time, local_time_zone)
         if subscription.event_time < data["event_time"]:

@@ -8,6 +8,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from djpaddle.models import Plan, Subscription
+from djpaddle.utils import PADDLE_DATETIME_FORMAT
 
 from .fixtures.webhooks import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
 
@@ -152,11 +153,10 @@ class TestWebhook(TestCase):
         subscription = Subscription.objects.get(pk=subscription_id)
         self.assertEqual(subscription.status, "active")
 
-        datetime_format = "%Y-%m-%d %H:%M:%S"
         event_time = updated_data["event_time"]
-        event_time = datetime.strptime(event_time, datetime_format)
+        event_time = datetime.strptime(event_time, PADDLE_DATETIME_FORMAT)
         event_time = event_time - timedelta(days=1)
-        updated_data["event_time"] = event_time.strftime(datetime_format)
+        updated_data["event_time"] = event_time.strftime(PADDLE_DATETIME_FORMAT)
         updated_data["status"] = "paused"
 
         updated_payload = urlencode(updated_data)
