@@ -10,7 +10,10 @@ from paddle import Paddle
 from . import settings, signals
 from .fields import PaddleCurrencyCodeField
 
-PADDLE_CLIENT = Paddle()
+
+PADDLE_CLIENT = Paddle(
+    vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
+)
 
 
 class PaddleBaseModel(models.Model):
