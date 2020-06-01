@@ -3,14 +3,19 @@ from datetime import datetime, timedelta
 from os.path import abspath, dirname, join
 from unittest import mock
 from urllib.parse import parse_qs, urlencode
+from uuid import uuid4
 
+import pytest
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from djpaddle.models import Plan, Subscription
-from djpaddle.utils import PADDLE_DATETIME_FORMAT
+from djpaddle.utils import PADDLE_DATE_FORMAT, PADDLE_DATETIME_FORMAT
 
-from .fixtures.webhooks import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
+from .fixtures.webhooks import (
+    FAKE_ALERT_TEST_SUBSCRIPTION_CREATED,
+    FAKE_GET_PLAN_RESPONSE,
+)
 
 
 class TestWebhook(TestCase):
@@ -36,10 +41,66 @@ class TestWebhook(TestCase):
     def test_webhook_is_valid_alert(self, is_valid_webhook):
         valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
         valid_alert["p_signature"] = "valid-signature"
-        pk = 1
         name = "monthly-subscription"
         Plan.objects.create(
-            pk=pk, name=name, billing_type="month", billing_period=1, trial_days=0,
+            pk=valid_alert["subscription_plan_id"],
+            name=name,
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
+        resp = self._send_alert(valid_alert)
+        self.assertTrue(is_valid_webhook.called)
+        self.assertEqual(resp.status_code, 200)
+        subscriptions = Subscription.objects.all()
+        self.assertEqual(subscriptions.count(), 1)
+        subscription = subscriptions[0]
+        self.assertEqual(subscription.cancel_url, valid_alert["cancel_url"])
+        self.assertEqual(subscription.checkout_id, valid_alert["checkout_id"])
+        self.assertEqual(subscription.currency, valid_alert["currency"])
+        self.assertEqual(subscription.email, valid_alert["email"])
+        event_time = subscription.event_time.strftime(PADDLE_DATETIME_FORMAT)
+        self.assertEqual(event_time, valid_alert["event_time"])
+        self.assertEqual(subscription.id, str(valid_alert["subscription_id"]))
+        self.assertEqual(
+            subscription.marketing_consent, valid_alert["marketing_consent"]
+        )
+        next_bill_date = subscription.next_bill_date.strftime(PADDLE_DATE_FORMAT)
+        self.assertEqual(next_bill_date, valid_alert["next_bill_date"])
+        self.assertEqual(subscription.passthrough, valid_alert["passthrough"])
+        self.assertEqual(subscription.plan_id, valid_alert["subscription_plan_id"])
+        self.assertEqual(subscription.quantity, valid_alert["quantity"])
+        self.assertEqual(subscription.source, valid_alert["source"])
+        self.assertEqual(subscription.status, valid_alert["status"])
+        self.assertEqual(subscription.unit_price, valid_alert["unit_price"])
+        self.assertEqual(subscription.update_url, valid_alert["update_url"])
+
+    @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
+    @mock.patch(
+        "djpaddle.models.Paddle.list_plans", return_value=FAKE_GET_PLAN_RESPONSE
+    )
+    def test_webhook_missing_plan(self, is_valid_webhook, plan_api_get):
+        valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
+        valid_alert["p_signature"] = "valid-signature"
+        with pytest.raises(Plan.DoesNotExist):
+            Plan.objects.get(id=valid_alert["subscription_plan_id"])
+        resp = self._send_alert(valid_alert)
+        self.assertTrue(is_valid_webhook.called)
+        self.assertEqual(resp.status_code, 200)
+        plan = Plan.objects.get(id=valid_alert["subscription_plan_id"])
+        self.assertEqual(plan.name, FAKE_GET_PLAN_RESPONSE[0]["name"])
+
+    @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
+    def test_webhook_missing_subscriber(self, is_valid_webhook):
+        valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
+        valid_alert["p_signature"] = "valid-signature"
+        valid_alert["email"] = "{0}@example.com".format(str(uuid4()))
+        Plan.objects.create(
+            pk=valid_alert["subscription_plan_id"],
+            name="test_webhook_missing_plan",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
         )
         resp = self._send_alert(valid_alert)
         self.assertTrue(is_valid_webhook.called)
@@ -101,6 +162,8 @@ class TestWebhook(TestCase):
         subscription = Subscription.objects.get(email=create_data["email"][0])
         self.assertEqual(subscription.email, "branson.nikolaus@example.org")
         self.assertEqual(subscription.quantity, int(updated_data["new_quantity"][0]))
+        subscriptions = Subscription.objects.all()
+        self.assertEqual(subscriptions.count(), 1)
 
     @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
     def test_subscription_cancelled_webhook(self, is_valid_webhook):

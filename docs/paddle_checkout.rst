@@ -88,7 +88,7 @@ In the redirect view you can then get the basic order information from Paddle
             try:
                 order_details = paddle.get_order_details(checkout_id=checkout_id)
             except PaddleException:
-                raise Http404
+                raise Http404()
             context['order_details'] = order_details
             return self.render_to_response(context)
 

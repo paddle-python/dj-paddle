@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from django.db import models
@@ -11,7 +12,9 @@ from . import settings, signals
 from .fields import PaddleCurrencyCodeField
 from .utils import PADDLE_DATETIME_FORMAT
 
-PADDLE_CLIENT = Paddle(
+log = logging.getLogger("djpaddle")
+
+paddle_client = Paddle(
     vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
 )
 
@@ -50,7 +53,12 @@ class Plan(PaddleBaseModel):
 
     @classmethod
     def api_list(cls):
-        return PADDLE_CLIENT.list_plans()
+        return paddle_client.list_plans()
+
+    @classmethod
+    def api_get(cls, plan_id):
+        plan_data = paddle_client.list_plans(plan=int(plan_id))[0]
+        return plan_data
 
     @classmethod
     def sync_from_paddle_data(cls, data):
@@ -159,10 +167,15 @@ class Subscription(PaddleBaseModel):
         # transform `user_id` to subscriber ref
         Subscriber = settings.get_subscriber_model()
         try:
-            data["subscriber"], created, = Subscriber.objects.get_or_create(
+            data["subscriber"], created, = Subscriber.objects.get(
                 email=payload["email"]
             )
         except Subscriber.DoesNotExist:
+            warning = (
+                "User with email {0} could not be found for subscription {1}. "
+                "Subscriber left empty"
+            )
+            log.warn(warning.format(payload["email"], data["id"]))
             data["subscriber"] = None
 
         # transform `subscription_plan_id` to plan ref
@@ -170,7 +183,8 @@ class Subscription(PaddleBaseModel):
         try:
             data["plan"] = Plan.objects.get(pk=plan_id)
         except Plan.DoesNotExist:
-            data["plan"] = None
+            plan_data = Plan.api_get(plan_id=plan_id)
+            data["plan"] = Plan.sync_from_paddle_data(plan_data)
 
         # sanitize fields
         valid_field_names = [field.name for field in cls._meta.get_fields()]
