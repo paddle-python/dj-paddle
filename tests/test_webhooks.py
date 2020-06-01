@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from djpaddle.models import Plan, Subscription
 
-from . import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
+from .fixtures.webhooks import FAKE_ALERT_TEST_SUBSCRIPTION_CREATED
 
 
 class TestWebhook(TestCase):
@@ -26,6 +26,7 @@ class TestWebhook(TestCase):
     def load_fixture(self, fixture_name):
         this_directory = abspath(dirname(__file__))
         fixture_directory = join(this_directory, "fixtures")
+        fixture_directory = join(fixture_directory, "webhooks")
         fixture_path = join(fixture_directory, fixture_name)
         with open(fixture_path, "r") as file:
             return file.read()
