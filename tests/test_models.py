@@ -16,7 +16,7 @@ class TestModelStrs(TestCase):
         plan = Plan.objects.create(
             pk=pk, name=name, billing_type="month", billing_period=1, trial_days=0,
         )
-        self.assertEqual(str(plan), "Plan <{}:{}>".format(name, str(pk)))
+        self.assertEqual(str(plan), "{}:{}".format(name, str(pk)))
 
     def test_price_str(self):
         plan = Plan.objects.create(
@@ -57,6 +57,4 @@ class TestModelStrs(TestCase):
             update_url="https://checkout.paddle.com/subscription/update?user=5&subscription=4&hash=aaaaaa",  # NOQA: E501
             updated_at=timezone.now(),
         )
-        self.assertEqual(
-            str(subscription), "Subscription <{}:{}>".format(user, str(pk))
-        )
+        self.assertEqual(str(subscription), "{}:{}".format(user, str(pk)))

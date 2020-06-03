@@ -111,7 +111,6 @@ Next add a Paddle product or subscription plan into the page context. Below is a
 
     from django.conf import settings
     from django.views.generic import TemplateView
-
     from djpaddle.models import Plan
 
 
@@ -120,11 +119,9 @@ Next add a Paddle product or subscription plan into the page context. Below is a
 
         def get_context_data(self, **kwargs):
             context = super().get_context_data(**kwargs)
-
             context['paddle_plan'] = Plan.objects.get(pk=kwargs['plan_id'])
             # If you have not added 'djpaddle.context_processors.vendor_id' as a template context processors
             context['DJPADDLE_VENDOR_ID'] = settings.DJPADDLE_VENDOR_ID
-
             return context
 
 
@@ -139,6 +136,10 @@ You can pass data to Paddle JS by add data attributes to the button. For example
 
 
 A full list of parameters can be found on the `PaddleJS parameters page <https://developer.paddle.com/webhook-reference/intro>`_
+
+
+For more information about options on what to do after a successfull checkout please see our  `Checkout success documentation <https://dj-paddle.readthedocs.io/en/latest/paddle_checkout.html#checkout-success>`_
+
 
 Subscription model
 ------------------

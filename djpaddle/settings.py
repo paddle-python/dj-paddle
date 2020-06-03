@@ -12,7 +12,6 @@ DJPADDLE_API_BASE = getattr(
 DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID")
 if not DJPADDLE_VENDOR_ID:
     raise ImproperlyConfigured("'DJPADDLE_VENDOR_ID' must be set")
-
 # create one at https://vendors.paddle.com/authentication
 DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY")
 if not DJPADDLE_API_KEY:

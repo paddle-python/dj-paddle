@@ -68,15 +68,15 @@ This will then redirect the user after the checkout data has been saved. The red
 Post-Checkout Order Information
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once the user has completed an order you app will need to find out about the order details from Paddle. There are several ways you can do this.
+Once the user has completed an order, you will probably want to display some kind of success message to you user with some information about the order. The best way to do this is redirecting the user to a success page using the ``djpaddle_checkout_success_redirect`` context variable above.
 
-.. note::
-    As `Paddle Post Checkout Order Information <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ states, order processing may take a few seconds after the transaction to complete. Keep this in mind when using the below.
-
-
-1. Using the redirect URL above and the `checkout` query parameter For example:
+In the redirect view you can then get the basic order information from Paddle
 
 .. code-block:: python
+    from django.http import Http404
+    from django.views.generic TemplateView
+    from paddle import Paddle, PaddleException
+
 
     class CheckoutSuccess(TemplateView):
         template_name = 'checkout_success.html'
@@ -84,24 +84,34 @@ Once the user has completed an order you app will need to find out about the ord
         def get(self, request, *args, **kwargs):
             context = self.get_context_data(**kwargs)
             checkout_id = request.GET['checkout']
-            # Get checkout and subscription data here
-            ...
+            paddle = Paddle()
+            try:
+                order_details = paddle.get_order_details(checkout_id=checkout_id)
+            except PaddleException:
+                raise Http404()
+            context['order_details'] = order_details
             return self.render_to_response(context)
 
 
-2. Using a ``post_save`` receiver on the ``Checkout`` model and using the `Paddle API getorder <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ endpoint
+.. note::
+    As `Paddle Post Checkout Order Information <https://developer.paddle.com/api-reference/checkout-api/order-information/getorder>`_ states, order processing may take a few seconds after the transaction to complete. It's best to wait for the created / succeeded webhook to be processed before actually creating updating your model(s).
+
+.. note::
+    dj-paddle does not yet support one-off purchases and does not do anything with ``payment_succeeded`` webhooks. This means there is currently no signal for one of purchases.
+
+
+To get notified as soon as the ``subscription_created`` Webhook has been processed by dj-paddle you can listen to a ``post_save`` signal on the ``Subscription`` model.
 
 .. code-block:: python
 
-    from djpaddle.models import Checkout, Subscription
+    from djpaddle.models import Subscription
 
 
-    def paddle_checkout_reciever(sender, instance, created, **kwargs):
+    def paddle_subscription_reciever(sender, instance, created, **kwargs):
         if created:
-            # Get checkout and subscription data here
+            ...
 
-
-    post_save.connect(paddle_checkout_reciever, sender=Checkout)
+    post_save.connect(paddle_subscription_reciever, sender=Subscription)
 
 
 

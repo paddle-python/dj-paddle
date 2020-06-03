@@ -1,10 +1,22 @@
+import logging
+from datetime import datetime
+
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from paddle import Paddle
 
-from . import api, settings, signals
+from . import settings, signals
 from .fields import PaddleCurrencyCodeField
+from .utils import PADDLE_DATETIME_FORMAT
+
+log = logging.getLogger("djpaddle")
+
+paddle_client = Paddle(
+    vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
+)
 
 
 class PaddleBaseModel(models.Model):
@@ -13,22 +25,6 @@ class PaddleBaseModel(models.Model):
 
     class Meta:
         abstract = True
-
-
-class Price(PaddleBaseModel):
-    plan = models.ForeignKey(
-        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
-    )
-    currency = PaddleCurrencyCodeField()
-    quantity = models.FloatField()
-    recurring = models.BooleanField()
-
-    def __str__(self):
-        return "{} {}".format(self.quantity, self.currency)
-
-    class Meta:
-        ordering = ["currency", "recurring"]
-        unique_together = ("plan", "currency", "recurring")
 
 
 class Plan(PaddleBaseModel):
@@ -57,45 +53,57 @@ class Plan(PaddleBaseModel):
 
     @classmethod
     def api_list(cls):
-        return api.retrieve(uri=cls.PADDLE_URI_LIST)
+        return paddle_client.list_plans()
+
+    @classmethod
+    def api_get(cls, plan_id):
+        plan_data = paddle_client.list_plans(plan=int(plan_id))[0]
+        return plan_data
 
     @classmethod
     def sync_from_paddle_data(cls, data):
-        pk = data.pop("id", None)
-        initial_price = data.pop("initial_price", [])
-        recurring_price = data.pop("recurring_price", [])
+        pk = data.pop("id")
+        initial_price = data.pop("initial_price", {})
+        recurring_price = data.pop("recurring_price", {})
 
-        plan, _ = cls.objects.get_or_create(pk=pk, defaults=data)
+        plan, __ = cls.objects.get_or_create(pk=pk, defaults=data)
 
-        # drop all existing prices
+        # drop all existing prices and recreate them
         plan.prices.all().delete()
+        prices = []
+        for currency, quantity in initial_price.items():
+            price = Price(
+                plan=plan, currency=currency, quantity=float(quantity), recurring=False,
+            )
+            prices.append(price)
+        for currency, quantity in recurring_price.items():
+            price = Price(
+                plan=plan, currency=currency, quantity=float(quantity), recurring=True,
+            )
+            prices.append(price)
 
-        Price.objects.bulk_create(
-            # re-create initial prices
-            [
-                Price(
-                    plan=plan,
-                    currency=currency,
-                    quantity=float(quantity),
-                    recurring=False,
-                )
-                for currency, quantity in initial_price.items()
-            ]
-            + [  # re-create initial prices
-                Price(
-                    plan=plan,
-                    currency=currency,
-                    quantity=float(quantity),
-                    recurring=True,
-                )
-                for currency, quantity in recurring_price.items()
-            ]
-        )
+        Price.objects.bulk_create(prices)
 
         return plan
 
     def __str__(self):
-        return "Plan <{}:{}>".format(self.name, str(self.id))
+        return "{}:{}".format(self.name, self.id)
+
+
+class Price(PaddleBaseModel):
+    plan = models.ForeignKey(
+        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
+    )
+    currency = PaddleCurrencyCodeField()
+    quantity = models.FloatField()
+    recurring = models.BooleanField()
+
+    def __str__(self):
+        return "{} {}".format(self.quantity, self.currency)
+
+    class Meta:
+        ordering = ["currency", "recurring"]
+        unique_together = ("plan", "currency", "recurring")
 
 
 class Subscription(PaddleBaseModel):
@@ -116,7 +124,7 @@ class Subscription(PaddleBaseModel):
     STATUS_PAST_DUE = "past_due"
     STATUS_PAUSED = "paused"
     STATUS_DELETED = "deleted"
-    STATUS = (
+    STATUS_CHOICES = (
         (STATUS_ACTIVE, _("active")),
         (STATUS_TRIALING, _("trialing")),
         (STATUS_PAST_DUE, _("past due")),
@@ -143,8 +151,8 @@ class Subscription(PaddleBaseModel):
     passthrough = models.TextField()
     quantity = models.IntegerField()
     source = models.URLField()
-    status = models.CharField(choices=STATUS, max_length=16)
-    plan = models.ForeignKey("djpaddle.Plan", on_delete=models.CASCADE)
+    status = models.CharField(choices=STATUS_CHOICES, max_length=16)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     unit_price = models.FloatField()
     update_url = models.URLField()
 
@@ -154,25 +162,29 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def _sanitize_webhook_payload(cls, payload):
         data = {}
-
-        data["id"] = payload.pop("subscription_id", None)
+        data["id"] = payload.pop("subscription_id")
 
         # transform `user_id` to subscriber ref
-        data["subscriber"] = None
-        subscriber_id = payload.pop("user_id", None)
-        if subscriber_id not in ["", None]:
-            (
-                data["subscriber"],
-                created,
-            ) = settings.get_subscriber_model().objects.get_or_create(
+        Subscriber = settings.get_subscriber_model()
+        try:
+            data["subscriber"], created, = Subscriber.objects.get(
                 email=payload["email"]
             )
+        except Subscriber.DoesNotExist:
+            warning = (
+                "User with email {0} could not be found for subscription {1}. "
+                "Subscriber left empty"
+            )
+            log.warn(warning.format(payload["email"], data["id"]))
+            data["subscriber"] = None
 
         # transform `subscription_plan_id` to plan ref
-        data["plan"] = None
-        plan_id = payload.pop("subscription_plan_id", None)
-        if plan_id not in ["", None]:
+        plan_id = payload.pop("subscription_plan_id")
+        try:
             data["plan"] = Plan.objects.get(pk=plan_id)
+        except Plan.DoesNotExist:
+            plan_data = Plan.api_get(plan_id=plan_id)
+            data["plan"] = Plan.sync_from_paddle_data(plan_data)
 
         # sanitize fields
         valid_field_names = [field.name for field in cls._meta.get_fields()]
@@ -189,11 +201,20 @@ class Subscription(PaddleBaseModel):
     @classmethod
     def create_or_update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
-        pk = data.pop("id")
-        return cls.objects.update_or_create(pk=pk, defaults=data)
+        pk = data.get("id")
+        try:
+            subscription = cls.objects.get(pk=pk)
+        except cls.DoesNotExist:
+            return cls.objects.create(pk=pk, **data)
+
+        event_time = datetime.strptime(data["event_time"], PADDLE_DATETIME_FORMAT)
+        local_time_zone = timezone.get_default_timezone()
+        data["event_time"] = timezone.make_aware(event_time, local_time_zone)
+        if subscription.event_time < data["event_time"]:
+            cls.objects.filter(pk=pk).update(**data)
 
     def __str__(self):
-        return "Subscription <{}:{}>".format(str(self.subscriber), str(self.id))
+        return "{}:{}".format(self.subscriber, self.id)
 
 
 class Checkout(models.Model):
@@ -210,17 +231,9 @@ class Checkout(models.Model):
 
 
 @receiver(signals.subscription_created)
-def on_subscription_created(sender, payload, *args, **kwargs):
-    Subscription.create_or_update_by_payload(payload)
-
-
 @receiver(signals.subscription_updated)
-def on_subscription_updated(sender, payload, *args, **kwargs):
-    Subscription.create_or_update_by_payload(payload)
-
-
 @receiver(signals.subscription_cancelled)
-def on_subscription_cancelled(sender, payload, *args, **kwargs):
+def subscription_event(sender, payload, *args, **kwargs):
     Subscription.create_or_update_by_payload(payload)
 
 

@@ -15,6 +15,10 @@ except ImportError:  # pragma: no cover
     from Crypto.Signature import pkcs1_15 as PKCS1_v1_5
 
 
+PADDLE_DATE_FORMAT = "%Y-%m-%d"
+PADDLE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
 def convert_pubkey_to_rsa(key):
     """
     convert key from PEM to DER - Strip the first and last lines and newlines,

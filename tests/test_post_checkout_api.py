@@ -6,6 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from djpaddle.models import Checkout
+from djpaddle.utils import PADDLE_DATETIME_FORMAT
 
 
 class TestPostCheckoutApi(TestCase):
@@ -31,7 +32,7 @@ class TestPostCheckoutApi(TestCase):
         self.assertEqual(checkout.completed, completed)
         self.assertEqual(checkout.passthrough, data["passthrough"])
         self.assertEqual(checkout.email, data["email"])
-        created = datetime.strptime(data["created_at"], "%Y-%m-%d %H:%M:%S")
+        created = datetime.strptime(data["created_at"], PADDLE_DATETIME_FORMAT)
         self.assertEqual(checkout.created_at, created.replace(tzinfo=pytz.UTC))
 
     def test_checkout_api_next_redirect(self):
@@ -57,7 +58,7 @@ class TestPostCheckoutApi(TestCase):
         self.assertEqual(checkout.completed, completed)
         self.assertEqual(checkout.passthrough, data["passthrough"])
         self.assertEqual(checkout.email, data["email"])
-        created = datetime.strptime(data["created_at"], "%Y-%m-%d %H:%M:%S")
+        created = datetime.strptime(data["created_at"], PADDLE_DATETIME_FORMAT)
         self.assertEqual(checkout.created_at, created.replace(tzinfo=pytz.UTC))
 
     def test_checkout_api_paddle_redirect(self):
@@ -83,7 +84,7 @@ class TestPostCheckoutApi(TestCase):
         self.assertEqual(checkout.completed, completed)
         self.assertEqual(checkout.passthrough, data["passthrough"])
         self.assertEqual(checkout.email, data["email"])
-        created = datetime.strptime(data["created_at"], "%Y-%m-%d %H:%M:%S")
+        created = datetime.strptime(data["created_at"], PADDLE_DATETIME_FORMAT)
         self.assertEqual(checkout.created_at, created.replace(tzinfo=pytz.UTC))
 
     def test_checkout_api_next_and_paddle_redirect(self):
@@ -111,7 +112,7 @@ class TestPostCheckoutApi(TestCase):
         self.assertEqual(checkout.completed, completed)
         self.assertEqual(checkout.passthrough, data["passthrough"])
         self.assertEqual(checkout.email, data["email"])
-        created = datetime.strptime(data["created_at"], "%Y-%m-%d %H:%M:%S")
+        created = datetime.strptime(data["created_at"], PADDLE_DATETIME_FORMAT)
         self.assertEqual(checkout.created_at, created.replace(tzinfo=pytz.UTC))
 
     def test_checkout_api_missing_not_required(self):
@@ -131,7 +132,7 @@ class TestPostCheckoutApi(TestCase):
         self.assertEqual(checkout.completed, completed)
         self.assertEqual(checkout.passthrough, data["passthrough"])
         self.assertEqual(checkout.email, data["email"])
-        created = datetime.strptime(data["created_at"], "%Y-%m-%d %H:%M:%S")
+        created = datetime.strptime(data["created_at"], PADDLE_DATETIME_FORMAT)
         self.assertEqual(checkout.created_at, created.replace(tzinfo=pytz.UTC))
 
     def test_checkout_api_missing_id(self):
