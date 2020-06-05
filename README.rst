@@ -1,5 +1,5 @@
 dj-paddle
-=============================
+=========
 
 |pypi-badge| |travis-badge| |doc-badge| |pyversions-badge|
 |license-badge|
@@ -9,13 +9,13 @@ Django + Paddle Made Easy
 (this project is heavily inspired by `dj-stripe <https://github.com/dj-stripe/dj-stripe/>`_)
 
 Introduction
-------------------------
+------------
 
 dj-paddle implements Paddle models (currently Subscription only), for Django.
 Set up your webhook and start receiving model updates.
 You will then have a copy of all Paddle subscriptions available in Django, no API traffic required!
 
-The full documentation is available at https://dj-paddle.readthedocs.org.
+The full documentation is available at https://dj-paddle.readthedocs.io.
 
 Features
 --------
@@ -69,7 +69,7 @@ Add your paddle keys and set the operating mode:
     # can be found at https://vendors.paddle.com/public-key
     DJPADDLE_PUBLIC_KEY = '<your-public-key>'
 
-djpaddle includes ``vendor_id`` template context processor which adds your vendor ID as ``DJPADDLE_VENDOR_ID`` to each template context
+djpaddle includes a ``vendor_id`` template context processor which adds your vendor ID as ``DJPADDLE_VENDOR_ID`` to each template context:
 
 .. code-block:: python
 
@@ -100,12 +100,14 @@ Paddle Checkout
 
 Next to setup a `PaddleJS checkout page <https://developer.paddle.com/guides/how-tos/checkout/paddle-checkout>`_
 
-First load in PaddleJS and initialise it by including the dj-paddle PaddleJS template in your own template to load PaddleJS::
+First load in PaddleJS and initialise it by including the dj-paddle PaddleJS template in your own template to load PaddleJS:
+
+.. code-block:: django
 
     {% include "djpaddle_paddlejs.html" %}
 
 
-Next add a Paddle product or subscription plan into the page context. Below is an example of how to do this using a class based view where ``plan_id`` is passed through as a value from the URL
+Next add a Paddle product or subscription plan into the page context. Below is an example of how to do this using a class based view where ``plan_id`` is passed through as a value from the URL:
 
 .. code-block:: python
 
@@ -125,12 +127,16 @@ Next add a Paddle product or subscription plan into the page context. Below is a
             return context
 
 
-Finally put a ``Buy Now!`` button for the plan subscription you added to the context ::
+Finally put a ``Buy Now!`` button for the plan subscription you added to the context:
+
+.. code-block:: django
 
     <a href="#!" class="paddle_button" data-product="{{ paddle_plan.id }}">Buy Now!</a>
 
 
-You can pass data to Paddle JS by add data attributes to the button. For example to set the users email you can use the ``data-email`` attribute ::
+You can pass data to Paddle JS by add data attributes to the button. For example to set the users email you can use the ``data-email`` attribute:
+
+.. code-block:: django
 
     <a href="#!" class="paddle_button" data-product="{{ paddle_plan.id }}" data-email="{{ user.email }}" >Buy Now!</a>
 
@@ -138,7 +144,7 @@ You can pass data to Paddle JS by add data attributes to the button. For example
 A full list of parameters can be found on the `PaddleJS parameters page <https://developer.paddle.com/webhook-reference/intro>`_
 
 
-For more information about options on what to do after a successfull checkout please see our  `Checkout success documentation <https://dj-paddle.readthedocs.io/en/latest/paddle_checkout.html#checkout-success>`_
+For more information about options on what to do after a successful checkout please see our  `Checkout success documentation <https://dj-paddle.readthedocs.io/en/latest/paddle_checkout.html#checkout-success>`_
 
 
 Subscription model
@@ -155,13 +161,10 @@ The model chosen must have an ``email`` field.
 
 **Warning**: To use this setting you must have already created and ran the initial migration for the app/model before adding ``djpadding`` to ``INSTALLED_APPS``.
 
-
-
 Reporting Security Issues
 -------------------------
 
 Please do not report security issues in public, but email the authors directly.
-
 
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/dj-paddle.svg
     :target: https://pypi.python.org/pypi/dj-paddle/
