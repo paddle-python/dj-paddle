@@ -75,7 +75,7 @@ In the redirect view you can then get the basic order information from Paddle
 .. code-block:: python
     from django.http import Http404
     from django.views.generic TemplateView
-    from paddle import Paddle, PaddleException
+    from paddle import PaddleClient, PaddleException
 
 
     class CheckoutSuccess(TemplateView):
@@ -84,7 +84,7 @@ In the redirect view you can then get the basic order information from Paddle
         def get(self, request, *args, **kwargs):
             context = self.get_context_data(**kwargs)
             checkout_id = request.GET['checkout']
-            paddle = Paddle()
+            paddle = PaddleClient()
             try:
                 order_details = paddle.get_order_details(checkout_id=checkout_id)
             except PaddleException:

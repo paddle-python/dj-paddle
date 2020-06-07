@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from paddle import Paddle
+from paddle import PaddleClient
 
 from . import settings, signals
 from .fields import PaddleCurrencyCodeField
@@ -14,7 +14,7 @@ from .utils import PADDLE_DATETIME_FORMAT
 
 log = logging.getLogger("djpaddle")
 
-paddle_client = Paddle(
+paddle_client = PaddleClient(
     vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
 )
 
