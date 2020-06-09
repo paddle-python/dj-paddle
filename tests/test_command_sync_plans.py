@@ -37,7 +37,7 @@ FAKE_PLAN_API_RESPONSE = [
 
 
 class TestSyncPlans(TestCase):
-    @mock.patch("djpaddle.models.Paddle.list_plans")
+    @mock.patch("djpaddle.models.PaddleClient.list_plans")
     def test_command(self, paddle_list_plans):
         paddle_list_plans.return_value = FAKE_PLAN_API_RESPONSE
 

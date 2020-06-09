@@ -77,7 +77,7 @@ class TestWebhook(TestCase):
 
     @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
     @mock.patch(
-        "djpaddle.models.Paddle.list_plans", return_value=FAKE_GET_PLAN_RESPONSE
+        "djpaddle.models.PaddleClient.list_plans", return_value=FAKE_GET_PLAN_RESPONSE
     )
     def test_webhook_missing_plan(self, is_valid_webhook, plan_api_get):
         valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)

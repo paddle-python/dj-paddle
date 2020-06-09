@@ -170,8 +170,8 @@ Please do not report security issues in public, but email the authors directly.
     :target: https://pypi.python.org/pypi/dj-paddle/
     :alt: PyPI
 
-.. |travis-badge| image:: https://travis-ci.org/dj-paddle/dj-paddle.svg?branch=master
-    :target: https://travis-ci.org/dj-paddle/dj-paddle
+.. |travis-badge| image:: https://travis-ci.org/python-paddle/dj-paddle.svg?branch=master
+    :target: https://travis-ci.org/python-paddle/dj-paddle
     :alt: Travis
 
 .. |doc-badge| image:: https://readthedocs.org/projects/dj-paddle/badge/?version=latest
@@ -182,6 +182,6 @@ Please do not report security issues in public, but email the authors directly.
     :target: https://pypi.python.org/pypi/dj-paddle/
     :alt: Supported Python versions
 
-.. |license-badge| image:: https://img.shields.io/github/license/dj-paddle/dj-paddle
-    :target: https://github.com/dj-paddle/dj-paddle/blob/master/LICENSE
+.. |license-badge| image:: https://img.shields.io/github/license/python-paddle/dj-paddle
+    :target: https://github.com/python-paddle/dj-paddle/blob/master/LICENSE
     :alt: License
