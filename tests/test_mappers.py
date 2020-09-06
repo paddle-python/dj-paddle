@@ -2,7 +2,7 @@ from django.test.testcases import TestCase
 from django.utils import timezone
 
 from djpaddle import settings, mappers
-from djpaddle.models import Subscription
+from djpaddle.models import Plan, Subscription
 
 
 class TestPaddleMappers(TestCase):
@@ -17,6 +17,13 @@ class TestPaddleMappers(TestCase):
         Subscriber = settings.get_subscriber_model()
         subscriber = Subscriber.objects.create(username="user", email="test@example.com")
 
+        plan = Plan.objects.create(
+            pk=1,
+            name="name",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
         Subscription.objects.create(
             cancel_url="https://checkout.paddle.com/subscription/cancel?user=1&subscription=2&hash=aaaaaa",  # NOQA: E501
             checkout_id="1",
@@ -32,7 +39,7 @@ class TestPaddleMappers(TestCase):
             quantity=1,
             source="",
             status="active",
-            subscriber=user,
+            subscriber=None,
             unit_price=0.0,
             update_url="https://checkout.paddle.com/subscription/update?user=5&subscription=4&hash=aaaaaa",  # NOQA: E501
             updated_at=timezone.now(),
