@@ -4,10 +4,6 @@ from django.core.exceptions import ImproperlyConfigured
 
 from .utils import convert_pubkey_to_rsa
 
-DJPADDLE_API_BASE = getattr(
-    settings, "DJPADDLE_API_BASE", "https://vendors.paddle.com/api/2.0/"
-)
-
 # can be found at https://vendors.paddle.com/authentication
 DJPADDLE_VENDOR_ID = getattr(settings, "DJPADDLE_VENDOR_ID")
 if not DJPADDLE_VENDOR_ID:
