@@ -60,15 +60,3 @@ def test_djpaddle_subscriber_model_does_not_exist(settings):
 
     with pytest.raises(ImproperlyConfigured):
         get_subscriber_model()
-
-
-def test_missing_djpaddle_subscriber_model(settings):
-    settings.DJPADDLE_SUBSCRIBER_MODEL = "djpaddle.Price"
-    from djpaddle import settings
-    from importlib import reload
-
-    reload(settings)
-    from djpaddle.settings import get_subscriber_model
-
-    with pytest.raises(ImproperlyConfigured):
-        get_subscriber_model()

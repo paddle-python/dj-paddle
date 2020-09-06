@@ -62,9 +62,7 @@ class TestWebhook(TestCase):
         event_time = subscription.event_time.strftime(PADDLE_DATETIME_FORMAT)
         self.assertEqual(event_time, valid_alert["event_time"])
         self.assertEqual(subscription.id, str(valid_alert["subscription_id"]))
-        self.assertEqual(
-            subscription.marketing_consent, valid_alert["marketing_consent"]
-        )
+        self.assertEqual(subscription.marketing_consent, valid_alert["marketing_consent"])
         next_bill_date = subscription.next_bill_date.strftime(PADDLE_DATE_FORMAT)
         self.assertEqual(next_bill_date, valid_alert["next_bill_date"])
         self.assertEqual(subscription.passthrough, valid_alert["passthrough"])
@@ -76,9 +74,7 @@ class TestWebhook(TestCase):
         self.assertEqual(subscription.update_url, valid_alert["update_url"])
 
     @mock.patch("djpaddle.views.is_valid_webhook", return_value=True)
-    @mock.patch(
-        "djpaddle.models.PaddleClient.list_plans", return_value=FAKE_GET_PLAN_RESPONSE
-    )
+    @mock.patch("djpaddle.models.PaddleClient.list_plans", return_value=FAKE_GET_PLAN_RESPONSE)
     def test_webhook_missing_plan(self, is_valid_webhook, plan_api_get):
         valid_alert = deepcopy(FAKE_ALERT_TEST_SUBSCRIPTION_CREATED)
         valid_alert["p_signature"] = "valid-signature"

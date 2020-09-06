@@ -14,19 +14,25 @@ class TestModelStrs(TestCase):
         pk = 1
         name = "test"
         plan = Plan.objects.create(
-            pk=pk, name=name, billing_type="month", billing_period=1, trial_days=0,
+            pk=pk,
+            name=name,
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
         )
         self.assertEqual(str(plan), "{}:{}".format(name, str(pk)))
 
     def test_price_str(self):
         plan = Plan.objects.create(
-            pk=1, name="name", billing_type="month", billing_period=1, trial_days=0,
+            pk=1,
+            name="name",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
         )
         quantity = 0.1
         currency = "USD"
-        price = Price.objects.create(
-            plan=plan, currency=currency, quantity=quantity, recurring=True
-        )
+        price = Price.objects.create(plan=plan, currency=currency, quantity=quantity, recurring=True)
         price_string = "{} {}".format(quantity, currency)
         self.assertEqual(str(price), price_string)
 
@@ -34,7 +40,11 @@ class TestModelStrs(TestCase):
         user = "test"
         user = User.objects.create(username=user)
         plan = Plan.objects.create(
-            pk=1, name="name", billing_type="month", billing_period=1, trial_days=0,
+            pk=1,
+            name="name",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
         )
         pk = 1
         subscription = Subscription.objects.create(

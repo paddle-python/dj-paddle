@@ -12,7 +12,9 @@ from djpaddle.utils import PADDLE_DATETIME_FORMAT
 class TestPostCheckoutApi(TestCase):
     def _api_request(self, url, data):
         return Client().post(
-            url, data, content_type="application/x-www-form-urlencoded",
+            url,
+            data,
+            content_type="application/x-www-form-urlencoded",
         )
 
     def test_checkout_api(self):
