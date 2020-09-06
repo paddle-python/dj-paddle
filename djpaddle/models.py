@@ -8,15 +8,13 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from paddle import PaddleClient
 
-from . import settings, signals
+from . import settings, signals, mappers
 from .fields import PaddleCurrencyCodeField
 from .utils import PADDLE_DATETIME_FORMAT
 
 log = logging.getLogger("djpaddle")
 
-paddle_client = PaddleClient(
-    vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY
-)
+paddle_client = PaddleClient(vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY)
 
 
 class PaddleBaseModel(models.Model):
@@ -72,14 +70,10 @@ class Plan(PaddleBaseModel):
         plan.prices.all().delete()
         prices = []
         for currency, quantity in initial_price.items():
-            price = Price(
-                plan=plan, currency=currency, quantity=float(quantity), recurring=False,
-            )
+            price = Price(plan=plan, currency=currency, quantity=float(quantity), recurring=False,)
             prices.append(price)
         for currency, quantity in recurring_price.items():
-            price = Price(
-                plan=plan, currency=currency, quantity=float(quantity), recurring=True,
-            )
+            price = Price(plan=plan, currency=currency, quantity=float(quantity), recurring=True,)
             prices.append(price)
 
         Price.objects.bulk_create(prices)
@@ -91,9 +85,7 @@ class Plan(PaddleBaseModel):
 
 
 class Price(PaddleBaseModel):
-    plan = models.ForeignKey(
-        "djpaddle.Plan", on_delete=models.CASCADE, related_name="prices"
-    )
+    plan = models.ForeignKey("djpaddle.Plan", on_delete=models.CASCADE, related_name="prices")
     currency = PaddleCurrencyCodeField()
     quantity = models.FloatField()
     recurring = models.BooleanField()
@@ -114,8 +106,7 @@ class Subscription(PaddleBaseModel):
     'subscription_created', 'subscription_updated' and 'subscription_cancelled'.
 
     Stale subscriptions that are not associated with a subscriber are being
-    linked by comparing the email addresses of the subscriber model and the
-    subscription. Linking is optional and can be configured through the
+    linked by a customizable getter function. Linking is optional and can be configured through the
     settings ('DJPADDLE_LINK_STALE_SUBSCRIPTIONS').
     """
 
@@ -164,18 +155,12 @@ class Subscription(PaddleBaseModel):
         data = {}
         data["id"] = payload.pop("subscription_id")
 
-        # transform `user_id` to subscriber ref
         Subscriber = settings.get_subscriber_model()
         try:
-            data["subscriber"], created, = Subscriber.objects.get(
-                email=payload["email"]
-            )
+            data["subscriber"] = mappers.get_subscriber_by_payload(Subscriber, payload)
         except Subscriber.DoesNotExist:
-            warning = (
-                "User with email {0} could not be found for subscription {1}. "
-                "Subscriber left empty"
-            )
-            log.warn(warning.format(payload["email"], data["id"]))
+            warning = "Subscriber could not be found for subscription {0} with payload {1}. Subscriber left empty."
+            log.warn(warning.format(data["id"], payload))
             data["subscriber"] = None
 
         # transform `subscription_plan_id` to plan ref
@@ -240,11 +225,8 @@ def subscription_event(sender, payload, *args, **kwargs):
 if settings.DJPADDLE_LINK_STALE_SUBSCRIPTIONS:
 
     @receiver(post_save, sender=settings.DJPADDLE_SUBSCRIBER_MODEL)
-    def link_stale_subscriptions_to_subscriber(
-        sender, instance, created, *args, **kwargs
-    ):
+    def link_stale_subscriptions_to_subscriber(sender, instance, created, *args, **kwargs):
         if created:
-            subscriptions = Subscription.objects.filter(
-                subscriber=None, email__iexact=instance.email
-            )
-            subscriptions.update(subscriber=instance)
+            queryset = Subscription.objects.filter(subscriber=None)
+            queryset = mappers.get_subscriptions_by_subscriber(instance, queryset)
+            queryset.update(subscriber=instance)
