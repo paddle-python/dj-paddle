@@ -133,7 +133,7 @@ class Subscription(PaddleBaseModel):
         (STATUS_DELETED, _("deleted")),
     )
 
-    id = models.CharField(max_length=32, primary_key=True)
+    id = models.CharField(max_length=64, primary_key=True)
     subscriber = models.ForeignKey(
         settings.DJPADDLE_SUBSCRIBER_MODEL,
         related_name="subscriptions",
@@ -143,7 +143,7 @@ class Subscription(PaddleBaseModel):
     )
 
     cancel_url = models.URLField()
-    checkout_id = models.CharField(max_length=32)
+    checkout_id = models.CharField(max_length=64)
     currency = models.CharField(max_length=3)
     email = models.EmailField()
     event_time = models.DateTimeField()
@@ -218,7 +218,7 @@ class Checkout(models.Model):
     a backup in case the webhook is not recieved straight away
     """
 
-    id = models.CharField(max_length=40, primary_key=True)
+    id = models.CharField(max_length=64, primary_key=True)
     completed = models.NullBooleanField()
     passthrough = models.TextField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
