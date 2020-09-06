@@ -1,7 +1,7 @@
 import importlib
 import threading
 
-from . import models, settings
+from . import settings
 
 _cache = threading.local()
 _cache.modules = {}
