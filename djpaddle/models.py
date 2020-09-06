@@ -70,10 +70,20 @@ class Plan(PaddleBaseModel):
         plan.prices.all().delete()
         prices = []
         for currency, quantity in initial_price.items():
-            price = Price(plan=plan, currency=currency, quantity=float(quantity), recurring=False,)
+            price = Price(
+                plan=plan,
+                currency=currency,
+                quantity=float(quantity),
+                recurring=False,
+            )
             prices.append(price)
         for currency, quantity in recurring_price.items():
-            price = Price(plan=plan, currency=currency, quantity=float(quantity), recurring=True,)
+            price = Price(
+                plan=plan,
+                currency=currency,
+                quantity=float(quantity),
+                recurring=True,
+            )
             prices.append(price)
 
         Price.objects.bulk_create(prices)

@@ -23,7 +23,11 @@ class TestWebhook(TestCase):
         return Client().post(reverse("djpaddle:webhook"), data)
 
     def _send_alert_urlencoded(self, data):
-        return Client().post(reverse("djpaddle:webhook"), data, content_type="application/x-www-form-urlencoded",)
+        return Client().post(
+            reverse("djpaddle:webhook"),
+            data,
+            content_type="application/x-www-form-urlencoded",
+        )
 
     def load_fixture(self, fixture_name):
         this_directory = abspath(dirname(__file__))
@@ -39,7 +43,11 @@ class TestWebhook(TestCase):
         valid_alert["p_signature"] = "valid-signature"
         name = "monthly-subscription"
         Plan.objects.create(
-            pk=valid_alert["subscription_plan_id"], name=name, billing_type="month", billing_period=1, trial_days=0,
+            pk=valid_alert["subscription_plan_id"],
+            name=name,
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
         )
         resp = self._send_alert(valid_alert)
         self.assertTrue(is_valid_webhook.called)

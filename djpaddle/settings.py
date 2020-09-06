@@ -32,7 +32,9 @@ DJPADDLE_SUBSCRIBER_BY_PAYLOAD = getattr(
     settings, "DJPADDLE_SUBSCRIBER_BY_PAYLOAD", "djpaddle.mappers.subscriber_by_payload"
 )
 DJPADDLE_SUBSCRIPTIONS_BY_SUBSCRIBER = getattr(
-    settings, "DJPADDLE_SUBSCRIPTIONS_BY_SUBSCRIBER", "djpaddle.mappers.subscriptions_by_subscriber",
+    settings,
+    "DJPADDLE_SUBSCRIPTIONS_BY_SUBSCRIBER",
+    "djpaddle.mappers.subscriptions_by_subscriber",
 )
 
 

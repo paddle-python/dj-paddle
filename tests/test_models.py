@@ -13,11 +13,23 @@ class TestModelStrs(TestCase):
     def test_plan_str(self):
         pk = 1
         name = "test"
-        plan = Plan.objects.create(pk=pk, name=name, billing_type="month", billing_period=1, trial_days=0,)
+        plan = Plan.objects.create(
+            pk=pk,
+            name=name,
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
         self.assertEqual(str(plan), "{}:{}".format(name, str(pk)))
 
     def test_price_str(self):
-        plan = Plan.objects.create(pk=1, name="name", billing_type="month", billing_period=1, trial_days=0,)
+        plan = Plan.objects.create(
+            pk=1,
+            name="name",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
         quantity = 0.1
         currency = "USD"
         price = Price.objects.create(plan=plan, currency=currency, quantity=quantity, recurring=True)
@@ -27,7 +39,13 @@ class TestModelStrs(TestCase):
     def test_subscription_str(self):
         user = "test"
         user = User.objects.create(username=user)
-        plan = Plan.objects.create(pk=1, name="name", billing_type="month", billing_period=1, trial_days=0,)
+        plan = Plan.objects.create(
+            pk=1,
+            name="name",
+            billing_type="month",
+            billing_period=1,
+            trial_days=0,
+        )
         pk = 1
         subscription = Subscription.objects.create(
             cancel_url="https://checkout.paddle.com/subscription/cancel?user=1&subscription=2&hash=aaaaaa",  # NOQA: E501
