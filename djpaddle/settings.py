@@ -58,4 +58,3 @@ def get_subscriber_model():
         )
 
     return subscriber_model
-
