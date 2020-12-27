@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from django.db import models
+from django.conf import settings as djsettings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -10,7 +11,7 @@ from paddle import PaddleClient
 
 from . import settings, signals, mappers
 from .fields import PaddleCurrencyCodeField
-from .utils import PADDLE_DATETIME_FORMAT
+from .utils import PADDLE_DATETIME_FORMAT, PADDLE_DATE_FORMAT
 
 log = logging.getLogger("djpaddle")
 
@@ -191,6 +192,8 @@ class Subscription(PaddleBaseModel):
             if key in valid_field_names:
                 data[key] = value
 
+        data = convert_datetime_strings_to_datetimes(data, cls)
+
         return data
 
     @classmethod
@@ -202,9 +205,6 @@ class Subscription(PaddleBaseModel):
         except cls.DoesNotExist:
             return cls.objects.create(pk=pk, **data)
 
-        event_time = datetime.strptime(data["event_time"], PADDLE_DATETIME_FORMAT)
-        local_time_zone = timezone.get_default_timezone()
-        data["event_time"] = timezone.make_aware(event_time, local_time_zone)
         if subscription.event_time < data["event_time"]:
             cls.objects.filter(pk=pk).update(**data)
 
@@ -240,3 +240,23 @@ if settings.DJPADDLE_LINK_STALE_SUBSCRIPTIONS:
             queryset = Subscription.objects.filter(subscriber=None)
             queryset = mappers.get_subscriptions_by_subscriber(instance, queryset)
             queryset.update(subscriber=instance)
+
+
+def convert_datetime_strings_to_datetimes(data, model):
+    datetime_fields = [field.name for field in model._meta.get_fields() if isinstance(field, models.DateTimeField)]
+    for field in datetime_fields:
+        if field not in data:
+            continue
+
+        try:
+            data[field] = datetime.strptime(data[field], PADDLE_DATETIME_FORMAT)
+        except ValueError:
+            # Some fields such as next_bill_date should perhaps be
+            # a DateField not DatetimeField
+            data[field] = datetime.strptime(data[field], PADDLE_DATE_FORMAT)
+
+        if djsettings.USE_TZ:
+            local_time_zone = timezone.get_default_timezone()
+            data[field] = timezone.make_aware(data[field], local_time_zone)
+
+    return data
