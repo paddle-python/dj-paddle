@@ -9,9 +9,15 @@ _cache.modules = {}
 
 def _get_fn(fn, *args, **kwargs):
     mod_name, func_name = fn.rsplit(".", 1)
-    if mod_name not in _cache.modules:
-        _cache.modules[mod_name] = importlib.import_module(mod_name)
-    return getattr(_cache.modules[mod_name], func_name)
+    try:
+        cached_modules = _cache.modules
+    except AttributeError:  # pragma: no cover
+        # AttributeError: '_thread._local' object has no attribute 'modules'
+        cached_modules = {}
+
+    if mod_name not in cached_modules:
+        cached_modules[mod_name] = importlib.import_module(mod_name)
+    return getattr(cached_modules[mod_name], func_name)
 
 
 def subscriber_by_payload(Subscriber, payload):
