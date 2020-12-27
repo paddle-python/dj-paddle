@@ -170,7 +170,7 @@ class Subscription(PaddleBaseModel):
             data["subscriber"] = mappers.get_subscriber_by_payload(Subscriber, payload)
         except Subscriber.DoesNotExist:
             warning = "Subscriber could not be found for subscription {0} with payload {1}. Subscriber left empty."
-            log.warn(warning.format(data["id"], payload))
+            log.warning(warning.format(data["id"], payload))
             data["subscriber"] = None
 
         # transform `subscription_plan_id` to plan ref
