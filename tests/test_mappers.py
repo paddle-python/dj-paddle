@@ -13,6 +13,13 @@ class TestPaddleMappers(TestCase):
         with self.assertRaises(Subscriber.DoesNotExist):
             mappers.get_subscriber_by_payload(Subscriber, payload)
 
+    def test_get_subscriber_by_payload_missing_email(self):
+        Subscriber = settings.get_subscriber_model()
+        payload = {"not-email": "nonexistent@email.com"}
+
+        with self.assertRaises(Subscriber.DoesNotExist):
+            mappers.get_subscriber_by_payload(Subscriber, payload)
+
     def test_get_subscriptions_by_subscriber(self):
         Subscriber = settings.get_subscriber_model()
         subscriber = Subscriber.objects.create(username="user", email="test@example.com")
