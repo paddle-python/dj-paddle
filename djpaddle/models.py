@@ -228,6 +228,7 @@ class Checkout(models.Model):
 @receiver(signals.subscription_created)
 @receiver(signals.subscription_updated)
 @receiver(signals.subscription_cancelled)
+@receiver(signals.subscription_payment_succeeded)
 def subscription_event(sender, payload, *args, **kwargs):
     Subscription.create_or_update_by_payload(payload)
 
