@@ -1,6 +1,5 @@
 from distutils.util import strtobool
 
-from django.core.exceptions import ValidationError
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -8,7 +7,7 @@ from django.views.generic import View
 from django.views.generic.edit import BaseCreateView
 
 from . import signals
-from .models import Checkout
+from .models import Checkout, convert_datetime_strings_to_datetimes
 from .utils import is_valid_webhook
 
 
@@ -73,13 +72,15 @@ class PaddlePostCheckoutApiView(BaseCreateView):
             return HttpResponseBadRequest('Missing "id"')
         try:
             data["completed"] = bool(strtobool(data["completed"]))
-        except KeyError:
+        except (KeyError, ValueError):
             return HttpResponseBadRequest('Missing "completed"')
 
         try:
-            Checkout.objects.update_or_create(pk=pk, defaults=data)
-        except ValidationError as e:
+            data = convert_datetime_strings_to_datetimes(data, Checkout)
+        except ValueError as e:
             return HttpResponseBadRequest(e)
+
+        Checkout.objects.update_or_create(pk=pk, defaults=data)
 
         next_url = request.GET.get("next")
         if next_url:
