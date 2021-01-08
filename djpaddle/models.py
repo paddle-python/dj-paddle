@@ -219,7 +219,7 @@ class Checkout(models.Model):
     """
 
     id = models.CharField(max_length=64, primary_key=True)
-    completed = models.NullBooleanField()
+    completed = models.BooleanField(null=True)
     passthrough = models.TextField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     created_at = models.DateTimeField(null=True, blank=True)
