@@ -13,6 +13,11 @@ DJPADDLE_API_KEY = getattr(settings, "DJPADDLE_API_KEY")
 if not DJPADDLE_API_KEY:
     raise ImproperlyConfigured("'DJPADDLE_API_KEY' must be set")
 
+# More info at https://developer.paddle.com/getting-started/sandbox
+DJPADDLE_SANDBOX = getattr(settings, "DJPADDLE_SANDBOX", False)
+if not isinstance(DJPADDLE_SANDBOX, bool):
+    raise ImproperlyConfigured("'DJPADDLE_SANDBOX' must be a boolean")
+
 # can be found at https://vendors.paddle.com/public-key
 DJPADDLE_PUBLIC_KEY = getattr(settings, "DJPADDLE_PUBLIC_KEY")
 if not DJPADDLE_PUBLIC_KEY:

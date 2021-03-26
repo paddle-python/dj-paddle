@@ -69,7 +69,10 @@ Add your paddle keys and set the operating mode:
     # can be found at https://vendors.paddle.com/public-key
     DJPADDLE_PUBLIC_KEY = '<your-public-key>'
 
-djpaddle includes a ``vendor_id`` template context processor which adds your vendor ID as ``DJPADDLE_VENDOR_ID`` to each template context:
+    # More info at https://developer.paddle.com/getting-started/sandbox
+    DJPADDLE_SANDBOX = False
+
+djpaddle includes ``vendor_id`` and ``sandbox`` template context processors which adds your vendor ID as ``DJPADDLE_VENDOR_ID`` and if you want to use the sandbox as ``DJPADDLE_SANDBOX`` to each template context:
 
 .. code-block:: python
 
@@ -81,6 +84,7 @@ djpaddle includes a ``vendor_id`` template context processor which adds your ven
             'context_processors': [
                 ...
                 'djpaddle.context_processors.vendor_id',
+                'djpaddle.context_processors.sandbox',
                 ...
             ]
         }
