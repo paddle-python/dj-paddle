@@ -15,12 +15,18 @@ To use `Paddle checkout <https://developer.paddle.com/guides/how-tos/checkout/pa
 .. note::
     You need to have added the ``djpaddle.context_processors.vendor_id`` template context processor or manually add ``DJPADDLE_VENDOR_ID`` to your context.
 
+.. note::
+    This template also supports the `Paddle sandbox environment  <https://developer.paddle.com/getting-started/sandbox>`_ if you have added the``djpaddle.context_processors.sandbox`` template context processor or manually add ``DJPADDLE_SANDBOX`` to your context.
+
 If you want to customise the Paddle setup you can manually add PaddleJS and ``Paddle.Setup`` manually with:
 
 .. code-block:: html
 
     <script src="https://cdn.paddle.com/paddle/paddle.js"></script>
     <script type="text/javascript">
+    {% if DJPADDLE_SANDBOX %}
+    Paddle.Environment.set('sandbox');
+    {% endif %}
     Paddle.Setup({
         vendor:  {{ DJPADDLE_VENDOR_ID }},
     });

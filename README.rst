@@ -128,6 +128,8 @@ Next add a Paddle product or subscription plan into the page context. Below is a
             context['paddle_plan'] = Plan.objects.get(pk=kwargs['plan_id'])
             # If you have not added 'djpaddle.context_processors.vendor_id' as a template context processors
             context['DJPADDLE_VENDOR_ID'] = settings.DJPADDLE_VENDOR_ID
+            # If you have not added 'djpaddle.context_processors.sandbox' as a template context processors
+            context['DJPADDLE_SANDBOX'] = settings.DJPADDLE_SANDBOX
             return context
 
 
