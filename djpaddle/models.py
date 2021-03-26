@@ -15,7 +15,11 @@ from .utils import PADDLE_DATETIME_FORMAT, PADDLE_DATE_FORMAT
 
 log = logging.getLogger("djpaddle")
 
-paddle_client = PaddleClient(vendor_id=settings.DJPADDLE_VENDOR_ID, api_key=settings.DJPADDLE_API_KEY)
+paddle_client = PaddleClient(
+    vendor_id=settings.DJPADDLE_VENDOR_ID,
+    api_key=settings.DJPADDLE_API_KEY,
+    sandbox=settings.DJPADDLE_SANDBOX,
+)
 
 
 class PaddleBaseModel(models.Model):

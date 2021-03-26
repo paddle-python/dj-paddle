@@ -38,6 +38,25 @@ def test_invalid_djpaddle_public_key(settings):
         reload(settings)
 
 
+def test_missing_sandbox(settings):
+    from djpaddle import settings
+    from importlib import reload
+
+    reload(settings)
+    from djpaddle.settings import DJPADDLE_SANDBOX
+    assert DJPADDLE_SANDBOX is False
+
+
+def test_invalid_sandbox(settings):
+    settings.DJPADDLE_SANDBOX = 'NOT-TRUE-OR-FALSE'
+    from djpaddle import settings
+    from importlib import reload
+
+    with pytest.raises(ImproperlyConfigured) as error:
+        reload(settings)
+    assert error.match("'DJPADDLE_SANDBOX' must be a boolean")
+
+
 def test_djpaddle_subscriber_model_invalid_name(settings):
     settings.DJPADDLE_SUBSCRIBER_MODEL = "fakemodel"
     from djpaddle import settings
