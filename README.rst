@@ -26,8 +26,8 @@ Features
 Requirements
 ------------
 
-* Django >= 2.1
-* Python >= 3.5
+* Django >= 2.2
+* Python >= 3.6
 
 Quickstart
 ----------
