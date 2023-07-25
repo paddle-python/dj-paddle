@@ -29,7 +29,7 @@ def subscriber_by_payload(Subscriber, payload):
     """
     if "email" not in payload:
         raise Subscriber.DoesNotExist("'email' missing in payload")
-    return Subscriber.objects.get(email=payload["email"])
+    return Subscriber.objects.get(email__iexact=payload["email"])
 
 
 def subscriptions_by_subscriber(subscriber, queryset):
